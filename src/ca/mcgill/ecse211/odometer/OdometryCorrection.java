@@ -1,0 +1,239 @@
+package ca.mcgill.ecse211.odometer;
+
+
+import ca.mcgill.ecse211.controller.LightSensorController;
+import lejos.hardware.Sound;
+import lejos.hardware.lcd.LCD;
+import lejos.hardware.motor.EV3LargeRegulatedMotor;
+
+public class OdometryCorrection {
+	// Constants
+	private static final int FORWARD_SPEED = 150;
+	private static final int ROTATE_SPEED = 80;
+	private static final double TILE_SIZE = 30.48;
+	private static final double WHEEL_RADIUS = 2.1;
+	private static final double DISTANCE_TO_SENSOR = 13.9;
+	// Left and right light sensors
+	private LightSensorController leftLightSensor;
+	private LightSensorController rightLightSensor;
+	// Left and right motors
+	private EV3LargeRegulatedMotor leftMotor;
+	private EV3LargeRegulatedMotor rightMotor;
+  
+
+	// Odometer
+	private Odometer odometer;
+
+	private double THRESHOLD = 0.30;
+
+	/**
+	 * Construction of the odometryCorrection class
+	 * @param odometer - odometer of the robot (singleton)
+	 * @param rightLightSensor - right front light sensor that is used
+
+	 * @param leftLightSensor - left back light sensor that is used
+	 * @param rightLightSensor - right back light sensor that is used
+	 * 
+	 * @param leftMotor - left motor that is used
+	 * @param rightMotor - right motor that is used
+	 */
+	public OdometryCorrection(Odometer odometer,EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor, LightSensorController leftLightSensor, LightSensorController rightLightSensor) {
+		this.odometer = odometer;
+		this.leftLightSensor = leftLightSensor;
+		this.rightLightSensor = rightLightSensor;
+		this.leftMotor = leftMotor;
+		this.rightMotor = rightMotor;
+		
+	}
+
+	/**
+	 * Correct position and odometer
+	 * @param thetaCorrection - orientation at which you want the robot to be/is
+	 */
+	public void correct(double thetaCorrection) {
+
+		travelDistance(-3, 80);
+		
+		
+		boolean rightLineDetected = false;
+		boolean leftLineDetected = false;
+
+		while (!leftLineDetected && !rightLineDetected ) {
+			//double rightSample = rightLS.fetch();
+			//double leftSample = leftLS.fetch();
+			if (rightLightSensor.fetch() < THRESHOLD) {
+				rightLineDetected = true;
+				// Stop the right motor
+
+			} else if (leftLightSensor.fetch() < THRESHOLD) {
+				leftLineDetected = true;
+
+				// Stop the left motor
+			}
+		}
+
+		// Get the odometer's reading 
+
+		// Keep moving the left/right motor until both lines have been detected
+		while ((!leftLineDetected || !rightLineDetected)) {
+			// If the other line detected, stop the motors
+			if (rightLineDetected && leftLightSensor.fetch() < THRESHOLD) {
+				leftLineDetected = true;
+			} else if (leftLineDetected && rightLightSensor.fetch() < THRESHOLD) {
+				rightLineDetected = true;
+			}
+		}
+
+		correctOdometer(thetaCorrection);
+
+
+
+	}
+	/**
+	 * Correct odometer 
+	 * @param theta - orientation at which you want the robot to be/is
+	 */
+	private void correctOdometer(double theta) {
+		//Correction variables
+		double xCorrection = 0;
+		double yCorrection = 0;
+		double thetaCorrection = translateTheta(theta);
+
+		//Correction in X
+		if (thetaCorrection == 90 || thetaCorrection == 270) {
+
+			if (thetaCorrection == 90) {
+				// Compute the sensors' X position in cm's
+				double position = odometer.getXYT()[0] + DISTANCE_TO_SENSOR;
+
+				// Find the X-coordinate of the nearest waypoint to sensorX.
+				int correctedPosition = (int) Math.round(position / TILE_SIZE);
+
+				// Get the correct X
+				xCorrection = TILE_SIZE * correctedPosition - DISTANCE_TO_SENSOR;
+
+			} else {
+				// Compute the sensors' X position in cm's
+				double position = odometer.getXYT()[0] - DISTANCE_TO_SENSOR;
+
+				// Find the X-coordinate of the nearest waypoint to sensorX.
+				int correctedPosition = (int) Math.round(position / TILE_SIZE);
+
+				// Get the correct X
+				xCorrection = TILE_SIZE * correctedPosition + DISTANCE_TO_SENSOR;
+
+			}
+			odometer.setX(xCorrection);
+
+			//Correction in Y
+		} else if (thetaCorrection == 0 || thetaCorrection == 180) {
+
+			if (thetaCorrection == 0) {
+				// Compute the sensors' Y position in cm's
+				double position = odometer.getXYT()[1] + DISTANCE_TO_SENSOR;
+
+				// Find the X-coordinate of the nearest waypoint to sensorX.
+				int correctedPosition= (int) Math.round(position / TILE_SIZE);
+
+				// Get the correct Y
+				yCorrection = TILE_SIZE * correctedPosition - DISTANCE_TO_SENSOR;
+
+				// Get the correct X
+				//corrX = intermediateOdo[0] - (dTheta / Math.abs(dTheta) * offset);
+
+			} else {
+				// Compute the sensors' Y position in cm's
+				double position = odometer.getXYT()[1] - DISTANCE_TO_SENSOR;
+
+				// Find the X-coordinate of the nearest waypoint to sensorX.
+				int correctedPosition = (int) Math.round(position / TILE_SIZE);
+
+				// Get the correct Y
+				yCorrection = TILE_SIZE * correctedPosition + DISTANCE_TO_SENSOR;
+
+			}
+			odometer.setY(yCorrection);
+		}
+
+		odometer.setTheta(thetaCorrection);
+
+	}
+	/**
+	 * This method allows to round the angle received
+	 * 
+	 * @param theta angle to get rounded
+	 * @return angle that is rounded to a general angle (integer)
+	 */
+	private double translateTheta(double theta){
+		if(theta > 345 && theta < 15){
+			return 0;
+		}
+		if(theta < 105 && theta > 75){
+			return 90;
+		}
+		if(theta < 195 && theta > 165){
+			return 180;
+		}
+		if(theta < 285 && theta > 255){
+			return 270;
+		}
+		return 0;
+	}
+	/**
+	 * This method resets the motors to stop in order to correct upon crossing a grid line
+	 */
+	public void resetMotors() {
+		// reset the motor
+		leftMotor.stop(true);
+		rightMotor.stop(false);
+		for (EV3LargeRegulatedMotor motor : new EV3LargeRegulatedMotor[] { leftMotor, rightMotor }) {
+			motor.setAcceleration(3000);
+		}
+		try {
+			Thread.sleep(200);
+		} catch (InterruptedException e) {
+		}
+	}
+	
+	/**
+	 * @param leftSpeed - left motor speed
+	 * @param rightSpeed - right motor speed
+	 * 
+	 */	
+	public void setSpeeds(int leftSpeed, int rightSpeed) {
+		leftMotor.setSpeed(leftSpeed);
+		rightMotor.setSpeed(rightSpeed);
+	}
+	
+	/**
+	 * @param distance - distance for motor to "travel"
+	 * @param speed - speed motors are set to
+	 * 
+	 */
+	public void travelDistance(double distance,int speed) {
+
+		resetMotors();
+		setSpeeds(speed,speed);
+		leftMotor.rotate(convertDistance(WHEEL_RADIUS, distance), true);
+		rightMotor.rotate(convertDistance(WHEEL_RADIUS, distance), false);
+	}
+	/**
+	 * @param radius - distance for motor to "travel"
+	 * @param distance - distance for motor to "travel"
+	 *
+	 */
+	public static int convertDistance(double radius, double distance) {
+		return (int) ((180.0 * distance) / (Math.PI * radius));
+	}
+	/**
+	 * A method that synchronizes the forward movement of the motors using 
+	 * the SynchronizeWith() method provided in LeJos
+	 */
+	public void moveForward() {
+		leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] { rightMotor });
+		leftMotor.startSynchronization();
+		leftMotor.forward();
+		rightMotor.forward();
+		leftMotor.endSynchronization();
+	}
+}
