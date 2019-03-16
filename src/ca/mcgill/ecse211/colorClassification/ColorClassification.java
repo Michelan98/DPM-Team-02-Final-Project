@@ -18,7 +18,7 @@ import lejos.utility.TimerListener;
 
 public class ColorClassification implements TimerListener {
 
-  private static Port colorPort = LocalEV3.get().getPort("S3");
+  private static Port colorPort = LocalEV3.get().getPort("S4");
   private static final SensorModes colorSensor = new EV3ColorSensor(colorPort);
   private static final SampleProvider colorSampleProvider = colorSensor.getMode("RGB");
   private float[] sample = new float[colorSampleProvider.sampleSize()];
@@ -59,7 +59,7 @@ public class ColorClassification implements TimerListener {
    * 
    * @throws InterruptedException
    */
-  public void colorClassify() throws InterruptedException {
+  public boolean colorClassify() throws InterruptedException {
 
     Timer timer = new Timer(100, new ColorClassification(sensorMotor, lcd, TR));
     timer.start();
@@ -67,8 +67,8 @@ public class ColorClassification implements TimerListener {
     //rotate 220 degrees around the can and then rotate back to the original position
     sensorMotor.setAcceleration(50);
     sensorMotor.setSpeed(70);
-    sensorMotor.rotate(-220);
-    sensorMotor.rotate(220);
+    sensorMotor.rotate(-150);
+    sensorMotor.rotate(150);
     //stop the timer, so no sample will be fetched during calculation time
     timer.stop();
 
@@ -86,25 +86,35 @@ public class ColorClassification implements TimerListener {
     switch (result) {
       case 0:
         lcd.drawString("Red", 0, 2);
+        Sound.playTone(100, 500);
+        Sound.playTone(100, 500);
+        Sound.playTone(100, 500);
+        Sound.playTone(100, 500);
         break;
       case 1:
         lcd.drawString("Green", 0, 2);
+        Sound.playTone(100, 500);
+        Sound.playTone(100, 500);
         break;
       case 2:
         lcd.drawString("Yellow", 0, 2);
+        Sound.playTone(100, 500);
+        Sound.playTone(100, 500);
+        Sound.playTone(100, 500);
         break;
       case 3:
         lcd.drawString("Blue", 0, 2);
+        Sound.playTone(100, 500);
         break;
     }
 
     //beep twice if the can has the target color; otherwise beep once
     if (result == TR) {
-      Sound.beep();
-      Sound.beep();
+      return true;
     } else {
-      Sound.beep();
+      return false;
     }
+    
 
   }
 
