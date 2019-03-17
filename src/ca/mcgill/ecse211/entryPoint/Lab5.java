@@ -2,6 +2,8 @@ package ca.mcgill.ecse211.entryPoint;
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
 import ca.mcgill.ecse211.colorClassification.ColorClassification;
+import ca.mcgill.ecse211.odometer.Odometer;
+import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
@@ -47,23 +49,40 @@ public class Lab5 {
   private static int SZ_UR_X = 14;
   private static int SZ_UR_Y = 5;
   
+  private static double track = 11.99;
+  private static double radius = 2.06;
+  
   /**
    * the entry point of the whole program. Run this class to start color detection at stationary position
    * @param str
    */
   public static void main(String str[]) {
-    final ColorClassification colorClassification = new ColorClassification(sensorMotor, lcd, TR);
-    //System.out.println("initialize");
-    new Thread() {
-      public void run() {
-        try {
-          colorClassification.colorClassify();
-        } catch (InterruptedException e) {
-          //e.printStackTrace();
-        }
-      }
-      }.start();
-      System.out.println("exit");   
+//    final ColorClassification colorClassification = new ColorClassification(sensorMotor, lcd, TR);
+//    //System.out.println("initialize");
+//    new Thread() {
+//      public void run() {
+//        try {
+//          colorClassification.colorClassify();
+//        } catch (InterruptedException e) {
+//          //e.printStackTrace();
+//        }
+//      }
+//      }.start();
+//      System.out.println("exit");   
+    
+    Odometer odometer;
+    odometer = Odometer.getOdometer(leftMotor, rightMotor);
+    Thread odoThread = new Thread(odometer);
+    odoThread.start();
+    
+    int angle = (int) ((180.0 * Math.PI * track * 360 / 360.0) / (Math.PI * radius));
+    
+    leftMotor.rotate((int) angle, true);
+    rightMotor.rotate(- angle, true);
+    
+    while(leftMotor.isMoving()) {
+      System.out.println(odometer.getXYT()[2]);
+    }
   }
   
 }

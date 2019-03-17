@@ -65,8 +65,8 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
   private static State state;
   private final double navigationAccuracy = 3;
-  private final double thetaAccuracy = 0.7;
-  private boolean xIsDone = false;
+  private final double thetaAccuracy = 3;
+  private boolean offsetAdded = false;
 
   private volatile static ArrayList<Double> canLocation; // the angle of can to the robot
   private static ArrayList<Double> dataset;
@@ -77,6 +77,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
       throws OdometerExceptions {
 
     odo = Odometer.getOdometer();
+    System.out.println(odo.getXYT()[0] + " " + odo.getXYT()[1] + " " + odo.getXYT()[2]);
     this.leftMotor = leftMotor;
     this.rightMotor = rightMotor;
 
@@ -127,17 +128,15 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     }
     timer.start();
 
+    // travel to the center of the searching area
     currentDestination[0] = 3;
     currentDestination[1] = 2;
-    // travelTo(currentDestination[0], currentDestination[1]); // half tile away from the searching
 
 
     state = State.INIT;
 
 
     while (true) {
-      lcd.drawString(state + "", 1, 1);
-      System.out.println(state + " us distance " + usDistance);
 
       switch (state) {
         case INIT: {
@@ -170,13 +169,14 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           for (Double data : canLocation) {
             turnTo(data);
             startColorDetection();
-            if (isTargetCan) {
-              state = State.GRABBINGCAN;
-              break;
-            }
+            // if (isTargetCan) {
+            // state = State.GRABBINGCAN;
+            // break;
+            // }
           }
 
           state = State.LEAVING;
+
           break;
 
         }
@@ -191,24 +191,25 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
         }
         case LEAVING: {
           // leave the searching area and go to the tunnel
-          // this is for beta demo only
+          currentDestination[0] = URX;
+          currentDestination[1] = URY;
           if (usDistance < 15 && usDistance > 2) {
             state = State.AVOIDINGCAN;
           } else if (!checkIfDone(currentDestination[0], currentDestination[1])) {
-            travelTo(URX, URY);
+            travelTo(currentDestination[0], currentDestination[1]);
           } else if (checkIfDone(currentDestination[0], currentDestination[1])) {
             turnTo(0);
             leftMotor.stop();
             rightMotor.stop();
             Sound.beep();
-            state = State.SCANNING;
           }
-
           break;
         }
       }
-      if (checkIfDone(currentDestination[0], currentDestination[1]) && state == State.LEAVING)
+      if (checkIfDone(currentDestination[0], currentDestination[1]) && state == State.LEAVING) {
         break;
+      }
+
       // try {
       // Thread.sleep(50);
       // } catch (InterruptedException e) {
@@ -216,106 +217,12 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
       // e.printStackTrace();
       // }
     }
-    // Sound.beep();
-    // timer.stop();
+    turnTo(0);
+    leftMotor.stop();
+    rightMotor.stop();
+    Sound.beep();
+    timer.stop();
   }
-
-
-
-  // // from (0,0) to (LLX, LLY)
-  // travelTo(currentDestination[0], currentDestination[1]);
-  // Sound.beep();
-  // travelTo(currentDestination[0], --currentDestination[1]);
-  //
-  // while (count <= (URX - LLX) + 1) {
-  // if (found) {
-  // travelTo(currentDestination[0], currentDestination[1]);
-  // break;
-  // }
-  // // current (x,y)
-  // double pos[] = odo.getXYT();
-  // double currentX = pos[0];
-  // double currentY = pos[1];
-  // double theta = pos[2];
-  //
-  // double xCoordinate = Math.round(((float) currentX / (float) TILE_SIZE));
-  // double yCoordinate = Math.round(((float) currentY / (float) TILE_SIZE));
-  //
-  // System.out.println("xCoordinate " + xCoordinate);
-  // System.out.println("yCoordinate " + yCoordinate);
-  // System.out.println("count " + count);
-  //
-  // // special case
-  // if ((yCoordinate == URY && aCanOnBoundary) || (yCoordinate == LLY && aCanOnBoundary)) {
-  // count++;
-  // }
-  //
-  // int isAtURY = -1;
-  //
-  // if (yCoordinate <= LLY - 1) {
-  // // turn to 0 and check for can
-  //
-  // // go to the next x
-  // if (count != 0) {
-  // currentDestination[0]++;
-  // travelTo(currentDestination[0], currentDestination[1]);
-  // }
-  //
-  // turnTo(0);
-  //
-  // sampleProvider.fetchSample(sample, 0);
-  // System.out.println("theta in LLY" + theta);
-  // System.out.println("sample " + sample[0]);
-  //
-  // Sound.beep();
-  //
-  // count++;
-  // isAtURY = 0;
-  // } else if (yCoordinate >= URY + 1) {
-  // // turn to 180 to check for can
-  //
-  // // go to the next x
-  // if (count != 0) {
-  // currentDestination[0]++;
-  // travelTo(currentDestination[0], currentDestination[1]);
-  // }
-  //
-  // turnTo(180);
-  //
-  // // System.out.println("theta in URY" + theta);
-  //
-  // sampleProvider.fetchSample(sample, 0);
-  // Sound.beep();
-  // System.out.println("sample" + sample[0] * 100);
-  // System.out.println("sample " + sample[0]);
-  // count++;
-  // isAtURY = 1;
-  // }
-  //
-  //
-  // if (sample[0] * 100 < (URY - LLY) * TILE_SIZE + 20 && isAtURY != -1) {
-  // // found a can
-  // // go one tile further, in case there are some cans on LLY or URY
-  // if (isAtURY == 0) {
-  // currentDestination[1] = URY + 1;
-  // } else if (isAtURY == 1) {
-  // currentDestination[1] = LLY - 1;
-  // }
-  //
-  // System.out.println("if " + currentDestination[0] + "," + currentDestination[1]);
-  // travelTo(currentDestination[0], currentDestination[1]);
-  //
-  // } else if (isAtURY == -1) {
-  // count++;
-  // System.out.println("else " + currentDestination[0] + "," + currentDestination[1]);
-  // travelTo(currentDestination[0], currentDestination[1]);
-  // }
-  // }
-
-  // got to (URX, URY)
-  // currentDestination[0] = URX;
-  // currentDestination[1] = URY;
-  // travelTo(currentDestination[0], currentDestination[1]);
 
 
   /**
@@ -335,22 +242,9 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     double theta = pos[2];
 
 
-    // calculate the distance needed to be traveled
-    // double distance = Math
-    // .sqrt(Math.pow((currentX - x * TILE_SIZE), 2) + Math.pow((currentY - y * TILE_SIZE), 2));
-    //
-    //
-    // // turn to the destination angle
-    // System.out.println(
-    // "turning angle" + angleCalculation(currentX, currentY, x * TILE_SIZE, y * TILE_SIZE));
-    // System.out.println("travel to " + x + " " + y);
-    // turnTo(angleCalculation(currentX, currentY, x * TILE_SIZE, y * TILE_SIZE));
-
     // run along the line
     double distanceX = x * TILE_SIZE - currentX;
-    System.out.println("DISTANCEX" + distanceX);
     double distanceY = y * TILE_SIZE - currentY;
-    System.out.println("DISTANCEY" + distanceY);
 
     if (Math.abs(distanceX) > navigationAccuracy) {
       if (distanceX < 0 && Math.abs(theta - 270) > thetaAccuracy) {
@@ -364,32 +258,28 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
     } else {
       // x is done
-      xIsDone = true;
+      if (!offsetAdded) {
+        //change the 3 to distanceX?
+        leftMotor.rotate(convertDistance(wheelRad, 3), true);
+        rightMotor.rotate(convertDistance(wheelRad, 3), false);
+        offsetAdded = true;
+      }
       if (distanceY < 0 && Math.abs(theta - 180) > thetaAccuracy) {
         turnTo(180);
-      } else if (distanceY > 0 && Math.abs(theta - 0) > thetaAccuracy) {
-        turnTo(0);
+      } else if (distanceY > 0) {
+        if (theta > 180 && Math.abs(theta - 360) > thetaAccuracy) {
+          turnTo(0);
+        } else if (theta < 180 && Math.abs(theta - 0) > thetaAccuracy) {
+          turnTo(0);
+        }
+
+
       }
 
       leftMotor.forward();
       rightMotor.forward();
 
     }
-
-    // while (isNavigating()) {
-    // if (flag == 1) {
-    // // detect a block
-    // timer.stop();
-    // if (!found) {
-    // startColorDetection();
-    // }
-    // // finish the colorDetection, start the can avoidance
-    // canAvoidance();
-    // // avoided the can continue on the navigation
-    // count--;
-    // break;
-    // }
-    // }
 
 
   }
@@ -400,7 +290,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
    * 
    * @param theta
    */
-  void turnTo(double theta) {
+  public void turnTo(double theta) {
 
     double currentTheta = odo.getXYT()[2];
     double turningAngle = theta - currentTheta;
@@ -473,33 +363,6 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   private static int convertAngle(double radius, double width, double angle) {
     // angle >= 0
     return convertDistance(radius, Math.PI * width * angle / 360.0);
-  }
-
-  /**
-   * This method calculate the turning angle.
-   * 
-   * @param currentX
-   * @param currentY
-   * @param x
-   * @param y
-   * @return angle needs to turn this method calculate the angle that the robot needs to turn when
-   *         traveling to the destination
-   */
-  private double angleCalculation(double currentX, double currentY, double x, double y) {
-
-    // theta is in degree
-    double dy = y - currentY;
-    double dx = x - currentX;
-    double dt = 0;
-    if (dy >= 0) {
-      dt = Math.atan(dx / dy);
-    } else if (dy <= 0 && dx >= 0) {
-      dt = Math.atan(dx / dy) + Math.PI;
-    } else {
-      dt = Math.atan(dx / dy) - Math.PI;
-    }
-
-    return dt * 180 / Math.PI;
   }
 
   /**
@@ -622,13 +485,13 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
    */
   public boolean checkIfDone(double destinationX, double destinationY) {
     double pos[] = odo.getXYT();
-    System.out.println("x " + pos[0] + "y " + pos[1]);
     if (Math.abs(destinationX * TILE_SIZE - pos[0]) < navigationAccuracy
         && Math.abs(destinationY * TILE_SIZE - pos[1]) < navigationAccuracy) {
-      System.out.println("is done");
+      //y offset
+      // leftMotor.rotate(convertDistance(wheelRad, 1.5),true);
+      // rightMotor.rotate(convertDistance(wheelRad,1.5), false);
       return true;
     } else {
-      System.out.println("not done");
       return false;
     }
   }
@@ -646,7 +509,6 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     if (state == State.SCANNING) {
       int filter_control = 15;
       int boundary = 32 * 2;
-      System.out.println(usDistance + " " + odo.getXYT()[2] + " " + filter_count);
       if (usDistance < boundary) {
 
         if (filter_count == 0) {
@@ -660,36 +522,26 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
           if (filter_count == 4) {
             Sound.beep();
-            System.out.println("usDistance: " + usDistance + " theta: " + odo.getXYT()[2]);
-            // canLocation.add(theta);
           }
 
         } else {
-          System.out.println(dataset.size() + " " + filter_count);
           filter_count = 0;
 
           if (dataset.size() >= filter_control) {
             // int mid = dataset.size()/2;
             double midTheta = (dataset.get(0) + dataset.get(dataset.size() - 1)) / 2;
-            System.out.println("mid " + midTheta);
             canLocation.add(midTheta);
-            System.out.println("added in if");
           }
           dataset = new ArrayList<Double>();
         }
       } else {
         // outside of boundary
-        if (dataset == null) {
-          System.out.println("null");
-        }
-        System.out.println(dataset.size() + " " + filter_count);
+
         filter_count = 0;
 
         if (dataset.size() >= filter_control) {
           double midTheta = (dataset.get(0) + dataset.get(dataset.size() - 1)) / 2;
-          System.out.println("mid " + midTheta);
           canLocation.add(midTheta);
-          System.out.println("added in else");
         }
         dataset = new ArrayList<Double>();
       }
@@ -700,14 +552,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
 
   public void scan() {
-    // try {
-    // timer = new Timer(20, new Navigation(leftMotor, rightMotor, track, wheelRad, LLX, LLY, URX,
-    // URY, sensorMotor, lcd, TR, sampleProvider));
-    // } catch (OdometerExceptions e) {
-    // // TODO Auto-generated catch block
-    // e.printStackTrace();
-    // }
-    // timer.start();
+
     leftMotor.setSpeed(TURNING_SPEED);
     rightMotor.setSpeed(TURNING_SPEED);
     leftMotor.rotate(convertAngle(wheelRad, track, 360), true);
@@ -722,7 +567,6 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
       e.printStackTrace();
     }
 
-    System.out.println("data size" + canLocation.size());
     for (Double data : canLocation) {
       lcd.drawString(Double.toString(data), 0, 0);
       System.out.println(Double.toString(data));
@@ -737,41 +581,47 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
 
   }
-  
-  public void navigateToSearchingArea(int LL_X, int LL_Y, int UR_X, int UR_Y, int corner, int SZR_X,
-      int SZR_Y) {
+
+  public void navigateToSearchingArea(int LL_X, int LL_Y, int UR_X, int UR_Y, int corner, int SZ_X,
+      int SZ_Y) {
     double[][] destinations = {{0, 0}, {0, 0}, {0, 0}};
     if (LL_Y + 2 == UR_Y && LL_X + 1 == UR_X) {
       if (corner == 2 || corner == 3) {
-        destinations[0][0] = LL_X + 0.5;
+        destinations[0][0] = LL_X + 0.45;
         destinations[0][1] = UR_Y + 0.5;
-        destinations[1][0] = LL_X + 0.5;
+        destinations[1][0] = LL_X + 0.45;
         destinations[1][1] = LL_Y - 0.5;
       } else if (corner == 1 || corner == 0) {
-        destinations[0][0] = LL_X + 0.5;
+        destinations[0][0] = LL_X + 0.55;
         destinations[0][1] = LL_Y - 0.5;
-        destinations[1][0] = LL_X + 0.5;
+        destinations[1][0] = LL_X + 0.55;
         destinations[1][1] = UR_Y + 0.5;
       }
     } else if (LL_Y + 1 == UR_Y && LL_X + 2 == UR_X) {
       if (corner == 1 || corner == 2) {
         destinations[0][0] = UR_X + 0.5;
-        destinations[0][1] = UR_Y - 0.5;
+        destinations[0][1] = UR_Y - 0.45;
         destinations[1][0] = LL_X - 0.5;
-        destinations[1][1] = UR_Y - 0.5;
+        destinations[1][1] = UR_Y - 0.45;
       } else if (corner == 0 || corner == 3) {
         destinations[0][0] = LL_X - 0.5;
-        destinations[0][1] = LL_Y + 0.5;
+        destinations[0][1] = LL_Y + 0.45;
         destinations[1][0] = UR_X + 0.5;
-        destinations[1][1] = LL_Y + 0.5;
+        destinations[1][1] = LL_Y + 0.45;
       }
     }
+
+    destinations[2][0] = SZ_X;
+    destinations[2][1] = SZ_Y;
 
     for (int i = 0; i < 3; i++) {
       while (!checkIfDone(destinations[i][0], destinations[i][1])) {
         travelTo(destinations[i][0], destinations[i][1]);
       }
+      leftMotor.rotate(convertDistance(wheelRad, 2), true);
+      rightMotor.rotate(convertDistance(wheelRad, 2), false);
     }
+    turnTo(0);
     leftMotor.stop(true);
     rightMotor.stop(false);
   }
