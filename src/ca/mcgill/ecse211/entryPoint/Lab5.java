@@ -42,10 +42,10 @@ public class Lab5 {
   private static int UR_X = 4;
   private static int UR_Y = 3;
   private static int corner = 0;
-  private static int SZR_LL_X = 6;
-  private static int SZR_LL_Y = 0;
-  private static int SZR_UR_X = 14;
-  private static int SZR_UR_Y = 5;
+  private static int SZ_LL_X = 6;
+  private static int SZ_LL_Y = 0;
+  private static int SZ_UR_X = 14;
+  private static int SZ_UR_Y = 5;
   
   /**
    * the entry point of the whole program. Run this class to start color detection at stationary position
