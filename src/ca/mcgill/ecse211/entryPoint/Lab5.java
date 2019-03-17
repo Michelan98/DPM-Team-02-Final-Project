@@ -37,6 +37,16 @@ public class Lab5 {
   private static final SensorModes leftLightMode = new EV3ColorSensor(leftLightPort);
   private static SampleProvider leftLightSampleProvider = leftLightMode.getMode("Red");
   
+  private static int LL_X = 2;
+  private static int LL_Y = 2;
+  private static int UR_X = 4;
+  private static int UR_Y = 3;
+  private static int corner = 0;
+  private static int SZR_LL_X = 6;
+  private static int SZR_LL_Y = 0;
+  private static int SZR_UR_X = 14;
+  private static int SZR_UR_Y = 5;
+  
   /**
    * the entry point of the whole program. Run this class to start color detection at stationary position
    * @param str
