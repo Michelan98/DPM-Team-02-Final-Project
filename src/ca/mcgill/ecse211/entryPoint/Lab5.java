@@ -53,8 +53,8 @@ public class Lab5 {
 //  private static int SZ_UR_X = 14;
 //  private static int SZ_UR_Y = 5;
   
-  public static double track = 11.99;
-  public static double radius = 2.06;
+  public static double TRACK = 11.99;
+  public static double WHEEL_RAD = 2.06;
   
 //declaring all variables for Wifi connection 
   public static int RedTeam, GreenTeam, redCorner, greenCorner, Red_UR_x, Red_LLx, Red_UR_y,
@@ -87,17 +87,7 @@ public class Lab5 {
     Odometer odometer;
     odometer = Odometer.getOdometer(leftMotor, rightMotor);
     Thread odoThread = new Thread(odometer);
-    odoThread.start();
-    
-    int angle = (int) ((180.0 * Math.PI * track * 360 / 360.0) / (Math.PI * radius));
-    
-    leftMotor.rotate((int) angle, true);
-    rightMotor.rotate(- angle, true);
-    
-    while(leftMotor.isMoving()) {
-      System.out.println(odometer.getXYT()[2]);
-    }
-    
+    odoThread.start();    
 
     leftLightSensor = new LightSensorController(leftLightMode);
     rightLightSensor = new LightSensorController(rightLightMode);
