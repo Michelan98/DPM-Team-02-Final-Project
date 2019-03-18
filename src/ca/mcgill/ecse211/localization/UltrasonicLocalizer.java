@@ -1,7 +1,7 @@
 package ca.mcgill.ecse211.localization;
 
-import ca.mcgill.ecse211.Odometer.Odometer;
-import ca.mcgill.ecse211.Odometer.OdometerExceptions;
+import ca.mcgill.ecse211.odometer.Odometer;
+import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import ca.mcgill.ecse211.entryPoint.Lab5;
 import lejos.hardware.Button;
 import lejos.hardware.Sound;
@@ -26,6 +26,7 @@ public class UltrasonicLocalizer implements TimerListener {
   private static int distance = -1;
 
   private static int k = 3;
+  
 
   public UltrasonicLocalizer(SampleProvider sampleProvider) throws OdometerExceptions {
 
@@ -77,8 +78,8 @@ public class UltrasonicLocalizer implements TimerListener {
     // turn to the actual 0
     Lab5.leftMotor.setSpeed(Lab5.TURNING_SPEED);
     Lab5.rightMotor.setSpeed(Lab5.TURNING_SPEED);
-    Lab5.leftMotor.rotate(convertAngle(Lab5.rad, Lab5.track, deltaTheta), true);
-    Lab5.rightMotor.rotate(-convertAngle(Lab5.rad, Lab5.track, deltaTheta), false);
+    Lab5.leftMotor.rotate(convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, deltaTheta), true);
+    Lab5.rightMotor.rotate(-convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, deltaTheta), false);
 
     odo.setTheta(0);
 
@@ -180,23 +181,23 @@ public class UltrasonicLocalizer implements TimerListener {
     if (Math.abs(turningAngle) <= 180) {
       if (turningAngle <= 0) {
         // turn left with -turningAngle
-        Lab5.leftMotor.rotate(-convertAngle(Lab5.rad, Lab5.track, -turningAngle), true);
-        Lab5.rightMotor.rotate(convertAngle(Lab5.rad, Lab5.track, -turningAngle), false);
+        Lab5.leftMotor.rotate(-convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, -turningAngle), true);
+        Lab5.rightMotor.rotate(convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, -turningAngle), false);
       } else {
         // turn right with turningAngle
-        Lab5.leftMotor.rotate(convertAngle(Lab5.rad, Lab5.track, turningAngle), true);
-        Lab5.rightMotor.rotate(-convertAngle(Lab5.rad, Lab5.track, turningAngle), false);
+        Lab5.leftMotor.rotate(convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, turningAngle), true);
+        Lab5.rightMotor.rotate(-convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, turningAngle), false);
       }
     } else if (Math.abs(turningAngle) > 180) {
       if (turningAngle < 0) {
         // turn right with 360+turning angle
-        Lab5.leftMotor.rotate(convertAngle(Lab5.rad, Lab5.track, 360 + turningAngle), true);
-        Lab5.rightMotor.rotate(-convertAngle(Lab5.rad, Lab5.track, 360 + turningAngle),
+        Lab5.leftMotor.rotate(convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, 360 + turningAngle), true);
+        Lab5.rightMotor.rotate(-convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, 360 + turningAngle),
             false);
       } else {
         // turn left with 360 - turningAngle
-        Lab5.leftMotor.rotate(-convertAngle(Lab5.rad, Lab5.track, 360 - turningAngle), true);
-        Lab5.rightMotor.rotate(convertAngle(Lab5.rad, Lab5.track, 360 - turningAngle), false);
+        Lab5.leftMotor.rotate(-convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, 360 - turningAngle), true);
+        Lab5.rightMotor.rotate(convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, 360 - turningAngle), false);
       }
     }
 

@@ -5,6 +5,7 @@ import java.io.UnsupportedEncodingException;
 import ca.mcgill.ecse211.colorClassification.ColorClassification;
 import ca.mcgill.ecse211.controller.LightSensorController;
 import ca.mcgill.ecse211.localization.LightLocalizer;
+import ca.mcgill.ecse211.localization.UltrasonicLocalizer;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import ca.mcgill.ecse211.odometer.OdometryCorrection;
@@ -56,6 +57,10 @@ public class Lab5 {
   public static double TRACK = 11.99;
   public static double WHEEL_RAD = 2.06;
   
+  public static int  TURNING_SPEED = 70;
+  public static final int  FORWARD_SPEED = 200;
+  public static final double TILE_SIZE = 30.48;
+  
 //declaring all variables for Wifi connection 
   public static int RedTeam, GreenTeam, redCorner, greenCorner, Red_UR_x, Red_LLx, Red_UR_y,
   Red_LL_y, Green_UR_x, Green_LL_x, Green_UR_y, Green_LL_y, Island_UR_x, Island_LL_x, Island_UR_y,
@@ -64,6 +69,8 @@ public class Lab5 {
   
   private static LightSensorController leftLightSensor;
   private static LightSensorController rightLightSensor;
+  
+  public static int ACCELERATION = 300;
 
   /**
    * the entry point of the whole program. Run this class to start color detection at stationary position
@@ -95,7 +102,16 @@ public class Lab5 {
     OdometryCorrection odometryCorrection = new OdometryCorrection(odometer, leftMotor, rightMotor,leftLightSensor, rightLightSensor );
     
     LightLocalizer lightLocalizer = new LightLocalizer(odometer, leftLightSensor, rightLightSensor, odometryCorrection);
+    try {
+      UltrasonicLocalizer usLocalizer = new UltrasonicLocalizer(sampleProvider);
+      usLocalizer.fallingEdge();
+    } catch (OdometerExceptions e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    
     lightLocalizer.startLocalize();
+    
   }
   
 }
