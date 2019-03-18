@@ -9,6 +9,10 @@ import ca.mcgill.ecse211.WiFi.*;
 
 public class Lab5 {
 
+	public static final int FORWARD_SPEED = 150;
+	public static final int TURNING_SPEED = 100;
+	public static final double TILE_SIZE = 30.48;
+	
 	// declaring all variables for Wifi connection 
 	public static int RedTeam, GreenTeam, redCorner, greenCorner, Red_UR_x, Red_LLx, Red_UR_y,
 	Red_LL_y, Green_UR_x, Green_LL_x, Green_UR_y, Green_LL_y, Island_UR_x, Island_LL_x, Island_UR_y,
