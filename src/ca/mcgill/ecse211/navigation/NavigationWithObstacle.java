@@ -1,6 +1,6 @@
 package ca.mcgill.ecse211.navigation;
 
-
+import java.util.ArrayList;
 import ca.mcgill.ecse211.colorClassification.ColorClassification;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
@@ -15,9 +15,9 @@ import lejos.robotics.SampleProvider;
 import lejos.utility.Timer;
 import lejos.utility.TimerListener;
 
-public class NavigationWithObstacle implements TimerListener {
+public class NavigationWithObstacle implements TimerListener, Runnable {
   private static final int FORWARD_SPEED = 150;
-  private static final int TURNING_SPEED = 100;
+  private static final int TURNING_SPEED = 70;
   private static final double TILE_SIZE = 30.48;
 
 
@@ -28,12 +28,9 @@ public class NavigationWithObstacle implements TimerListener {
   private static EV3LargeRegulatedMotor leftMotor = null;
   private static EV3LargeRegulatedMotor rightMotor = null;
 
-  // initialize the ultrasonic sensor
-  private static Port sensorPort = LocalEV3.get().getPort("S1");
-  private static SensorModes us = new EV3UltrasonicSensor(sensorPort);
-  private static SampleProvider sampleProvider = us.getMode("Distance");
-  private static float[] sample = new float[sampleProvider.sampleSize()];
-  // TODO: filter for us sensor?
+  private static SampleProvider sampleProvider;
+  private static float[] sample;
+
 
   private static TextLCD lcd = null;
   private static EV3LargeRegulatedMotor sensorMotor = null;
@@ -51,17 +48,42 @@ public class NavigationWithObstacle implements TimerListener {
 
   private static int flag = 0;
   private Timer timer;
+  private static ColorClassification colorClassification = null;
 
   private int currentDestination[] = {0, 0};
+  private boolean isTargetCan = false;
 
+  private boolean aCanOnBoundary = false;
+  private static volatile int usDistance;
+  private static volatile boolean detected = false;
+  private int filter_count = 0;
+  private static int previousUsDistance = 0;
+
+  private enum State {
+    INIT, TRAVELLING, SCANNING, COLORDETECTION, AVOIDINGCAN, GRABBINGCAN, LEAVING
+  };
+
+  private static State state;
+  private final double navigationAccuracy = 3;
+  private final double thetaAccuracy = 3;
+  private boolean offsetAdded = false;
+
+  private volatile static ArrayList<Double> canLocation; // the angle of can to the robot
+  private static ArrayList<Double> dataset;
 
   public NavigationWithObstacle(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,
       double track, double wheelRad, int LLX, int LLY, int URX, int URY,
-      EV3LargeRegulatedMotor sensorMotor, TextLCD lcd, int TR) throws OdometerExceptions {
+      EV3LargeRegulatedMotor sensorMotor, TextLCD lcd, int TR, SampleProvider sampleProvider)
+      throws OdometerExceptions {
 
     odo = Odometer.getOdometer();
+    System.out.println(odo.getXYT()[0] + " " + odo.getXYT()[1] + " " + odo.getXYT()[2]);
     this.leftMotor = leftMotor;
     this.rightMotor = rightMotor;
+
+    leftMotor.setSpeed(FORWARD_SPEED);
+    rightMotor.setSpeed(FORWARD_SPEED);
+
     this.track = track;
     this.wheelRad = wheelRad;
     this.TR = TR;
@@ -75,162 +97,204 @@ public class NavigationWithObstacle implements TimerListener {
 
     currentDestination[0] = LLX;
     currentDestination[1] = LLY;
-    
+
+    colorClassification = new ColorClassification(sensorMotor, lcd, TR);
+
+    this.sampleProvider = sampleProvider;
+    sample = new float[sampleProvider.sampleSize()];
+
     isNavigating = false;
 
-  }
+    canLocation = new ArrayList<Double>();
 
-
-
-  public void run() throws OdometerExceptions {
-
-    timer =  new Timer(100, new NavigationWithObstacle(leftMotor, rightMotor, track,
-        wheelRad, LLX, LLY, URX, URY, sensorMotor, lcd, TR));
-
-    // from (0,0) to (LLX, LLY)
-    travelTo(currentDestination[0], currentDestination[1]);
-    boolean isACan = false;
-
-    while (count <= (URX - LLX) + 1) {
-      // current (x,y)
-      double pos[] = odo.getXYT();
-      double currentX = pos[0];
-      double currentY = pos[1];
-      double theta = pos[2];
-      
-      double xCoordinate = Math.round(((float) currentX / (float) TILE_SIZE));
-      double yCoordinate = Math.round(((float) currentY / (float) TILE_SIZE));
-      
-      System.out.println("xCoordinate "+xCoordinate);
-      System.out.println("yCoordinate "+yCoordinate);
-      System.out.println("count "+ count);
-
-      int isAtURY = -1;
-      
-
-      if (count != 0 && isACan) {
-        // go to the next x
-        currentDestination[0]++;
-        travelTo(currentDestination[0], currentDestination[1]);
-      }
-
-      if (yCoordinate == LLY-1 || yCoordinate == LLY) {
-        // turn to 0 and check for can
-        turnTo(0);
-        
-        System.out.println("theta in LLY" + theta);
-        
-        sampleProvider.fetchSample(sample, 0);
-        System.out.println("sample"+sample[0]*100);
-        count++;
-        isAtURY = 0;
-      } else if (yCoordinate == URY+1) {
-        // turn to 180 to check for can
-        turnTo(180);
-        
-        System.out.println("theta in URY" + theta);
-        
-        sampleProvider.fetchSample(sample, 0);
-        System.out.println("sample"+sample[0]*100);
-        count++;
-        isAtURY = 1;
-      }
-
-
-      if (sample[0] * 100 < (URY-LLY)*TILE_SIZE+20 && isAtURY != -1) {
-        // found a can
-        // go one tile further, in case there are some cans on LLY or URY
-        isACan = true;
-        if (isAtURY == 0) {
-          currentDestination[1] = URY + 1;
-        } else if (isAtURY == 1) {
-          currentDestination[1] = LLY - 1;
-        }
-
-        System.out.println("if "+ currentDestination[0] +","+ currentDestination[1]);
-        travelTo(currentDestination[0], currentDestination[1]);
-
-      } else if (isAtURY != -1) {
-        // go to the next X coordinate
-        currentDestination[0]++;
-        System.out.println("else if "+ currentDestination[0] +","+ currentDestination[1]);
-        travelTo(currentDestination[0], currentDestination[1]);
-        isACan = false;
-      } else {
-        count++;
-        System.out.println("else "+ currentDestination[0] +","+ currentDestination[1]);
-        travelTo(currentDestination[0], currentDestination[1]);
-        isACan = true;  //TODO: check it...
-      }
-    }
-
-    // got to (URX, URY)
-    currentDestination[0] = URX;
-    currentDestination[1] = URY;
-    travelTo(currentDestination[0], currentDestination[1]);
+    // TODO: don't forget to change it to INIT!!
+    state = State.INIT;
+    dataset = new ArrayList<Double>();
 
   }
 
   /**
-   * this method cause the robot to travel to the absolute field location (x,y), and the robot will
-   * avoid obstacles it meets during the travel
+   * This method is inherited from the runnable interface. It is the entry point of the thread.
+   * State transition happens in this method.
+   */
+  public void run() {
+
+    try {
+      timer = new Timer(100, new NavigationWithObstacle(leftMotor, rightMotor, track, wheelRad, LLX,
+          LLY, URX, URY, sensorMotor, lcd, TR, sampleProvider));
+    } catch (OdometerExceptions e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    timer.start();
+
+    // travel to the center of the searching area
+    currentDestination[0] = 3;
+    currentDestination[1] = 2;
+
+
+    state = State.INIT;
+
+
+    while (true) {
+
+      switch (state) {
+        case INIT: {
+          if (!isNavigating()) {
+            state = State.TRAVELLING;
+          }
+          break;
+        }
+        case TRAVELLING: {
+          if (usDistance < 15 && usDistance > 2) {
+            state = State.AVOIDINGCAN;
+          } else if (!checkIfDone(currentDestination[0], currentDestination[1])) {
+            travelTo(currentDestination[0], currentDestination[1]);
+          } else if (checkIfDone(currentDestination[0], currentDestination[1])) {
+            turnTo(0);
+            leftMotor.stop();
+            rightMotor.stop();
+            Sound.beep();
+            state = State.SCANNING;
+          }
+
+          break;
+        }
+        case SCANNING: {
+          scan();
+          state = State.COLORDETECTION;
+        }
+        case COLORDETECTION: {
+
+          for (Double data : canLocation) {
+            turnTo(data);
+            startColorDetection();
+            // if (isTargetCan) {
+            // state = State.GRABBINGCAN;
+            // break;
+            // }
+          }
+
+          state = State.LEAVING;
+
+          break;
+
+        }
+        case GRABBINGCAN: {
+          startCanGrabbing();
+          state = State.LEAVING;
+        }
+        case AVOIDINGCAN: {
+          canAvoidance();
+          state = State.TRAVELLING;
+          break;
+        }
+        case LEAVING: {
+          // leave the searching area and go to the tunnel
+          currentDestination[0] = URX;
+          currentDestination[1] = URY;
+          if (usDistance < 15 && usDistance > 2) {
+            state = State.AVOIDINGCAN;
+          } else if (!checkIfDone(currentDestination[0], currentDestination[1])) {
+            travelTo(currentDestination[0], currentDestination[1]);
+          } else if (checkIfDone(currentDestination[0], currentDestination[1])) {
+            turnTo(0);
+            leftMotor.stop();
+            rightMotor.stop();
+            Sound.beep();
+          }
+          break;
+        }
+      }
+      if (checkIfDone(currentDestination[0], currentDestination[1]) && state == State.LEAVING) {
+        break;
+      }
+
+      // try {
+      // Thread.sleep(50);
+      // } catch (InterruptedException e) {
+      // // TODO Auto-generated catch block
+      // e.printStackTrace();
+      // }
+    }
+    turnTo(0);
+    leftMotor.stop();
+    rightMotor.stop();
+    Sound.beep();
+    timer.stop();
+  }
+
+
+  /**
+   * This method cause the robot to travel to the absolute field location (x,y), and the robot will
+   * avoid obstacles it meets during the travel.
    * 
-   * @param x
-   * @param y
+   * @param x: the x coordinate of the point
+   * @param y: the y coordinate of the point
    */
   public void travelTo(double x, double y) {
 
 
-    timer.start();
     // get the position reading from the odometer
     double pos[] = odo.getXYT();
     double currentX = pos[0];
     double currentY = pos[1];
     double theta = pos[2];
 
-    // calculate the distance needed to be traveled
-    double distance = Math
-        .sqrt(Math.pow((currentX - x * TILE_SIZE), 2) + Math.pow((currentY - y * TILE_SIZE), 2));
 
-    // turn to the destination angle
-    turnTo(angleCalculation(currentX, currentY, x * TILE_SIZE, y * TILE_SIZE));
+    // run along the line
+    double distanceX = x * TILE_SIZE - currentX;
+    double distanceY = y * TILE_SIZE - currentY;
 
-    leftMotor.setSpeed(FORWARD_SPEED);
-    rightMotor.setSpeed(FORWARD_SPEED);
-    leftMotor.rotate(convertDistance(wheelRad, distance), true);
-    rightMotor.rotate(convertDistance(wheelRad, distance), true);
-
-    while (isNavigating()) {
-//      System.out.println("isNavigating "+flag);
-      if (flag == 1) {
-        // detect a block
-        System.out.println("start color detection");
-        timer.stop();
-        startColorDetection();
-        // finish the colorDetection, start the can avoidance
-        canAvoidance();
-        // avoided the can continue on the navigation
-        count--;
-        System.out.println("finish color detection "+ count);
-        break;
+    if (Math.abs(distanceX) > navigationAccuracy) {
+      if (distanceX < 0 && Math.abs(theta - 270) > thetaAccuracy) {
+        turnTo(270);
+      } else if (distanceX > 0 && Math.abs(theta - 90) > thetaAccuracy) {
+        turnTo(90);
       }
+
+      leftMotor.forward();
+      rightMotor.forward();
+
+    } else {
+      // x is done
+      if (!offsetAdded) {
+        //change the 3 to distanceX?
+        leftMotor.rotate(convertDistance(wheelRad, 3), true);
+        rightMotor.rotate(convertDistance(wheelRad, 3), false);
+        offsetAdded = true;
+      }
+      if (distanceY < 0 && Math.abs(theta - 180) > thetaAccuracy) {
+        turnTo(180);
+      } else if (distanceY > 0) {
+        if (theta > 180 && Math.abs(theta - 360) > thetaAccuracy) {
+          turnTo(0);
+        } else if (theta < 180 && Math.abs(theta - 0) > thetaAccuracy) {
+          turnTo(0);
+        }
+
+
+      }
+
+      leftMotor.forward();
+      rightMotor.forward();
+
     }
 
-    timer.stop();
 
   }
 
   /**
-   * this method causes the robot to turn to the absolute heading theta the method turn a minimal
-   * angel to its target
+   * This method causes the robot to turn to the absolute heading theta the method turn a minimal
+   * angel to its target.
    * 
    * @param theta
    */
-  void turnTo(double theta) {
+  public void turnTo(double theta) {
 
     double currentTheta = odo.getXYT()[2];
     double turningAngle = theta - currentTheta;
-    
+
     leftMotor.setSpeed(TURNING_SPEED);
     rightMotor.setSpeed(TURNING_SPEED);
 
@@ -255,10 +319,13 @@ public class NavigationWithObstacle implements TimerListener {
         rightMotor.rotate(convertAngle(wheelRad, track, 360 - turningAngle), false);
       }
     }
+    leftMotor.setSpeed(FORWARD_SPEED);
+    rightMotor.setSpeed(FORWARD_SPEED);
 
   }
 
   /**
+   * This method check whether the robot is navigating.
    * 
    * @return true if another thread has called travelTo() or turnTo() false otherwise
    */
@@ -285,7 +352,7 @@ public class NavigationWithObstacle implements TimerListener {
 
 
   /**
-   * this method calculate the distance that the robot needed to travel when finishing the turn
+   * This method calculate the distance that the robot needed to travel when finishing the turn.
    * 
    * @param radius
    * @param width
@@ -299,112 +366,265 @@ public class NavigationWithObstacle implements TimerListener {
   }
 
   /**
-   * 
-   * @param currentX
-   * @param currentY
-   * @param x
-   * @param y
-   * @return angle needs to turn this method calculate the angle that the robot needs to turn when
-   *         traveling to the destination
+   * This method starts color detection.
    */
-  private double angleCalculation(double currentX, double currentY, double x, double y) {
-
-    // theta is in degree
-    double dy = y - currentY;
-    double dx = x - currentX;
-    double dt = 0;
-    if (dy >= 0) {
-      dt = Math.atan(dx / dy);
-    } else if (dy <= 0 && dx >= 0) {
-      dt = Math.atan(dx / dy) + Math.PI;
-    } else {
-      dt = Math.atan(dx / dy) - Math.PI;
-    }
-
-    return dt * 180 / Math.PI;
-  }
-
   private void startColorDetection() {
 
-    //Sound.beep();
-    int sampleInCm = (int) (sample[0] * 100);
-    // TODO: leave 1 cm space??
-    //int distance = sampleInCm % 10 - 1 + 10 * (sampleInCm % 10);
-    int distance = sampleInCm -2;
+    int distance = usDistance;
     leftMotor.setSpeed(FORWARD_SPEED);
     rightMotor.setSpeed(FORWARD_SPEED);
+
+    // change the way of traveling!!!
     leftMotor.rotate(convertDistance(wheelRad, distance), true);
     rightMotor.rotate(convertDistance(wheelRad, distance), false);
-     Sound.beep();
     // reach the can and start the colorDetection
 
-    // final ColorClassification colorClassification = new ColorClassification(sensorMotor, lcd
-    // ,TR);
-    //
-    // new Thread() {
-    // public void run() {
-    // try {
-    // colorClassification.colorClassify();
-    // } catch (InterruptedException e) {
-    // // e.printStackTrace();
-    // }
-    // }
-    // }.start();
-    
-    //TODO: need to shut down the current thread
+    Thread colorThread = new Thread() {
+      public void run() {
+        try {
+          isTargetCan = colorClassification.colorClassify();
+        } catch (InterruptedException e) {
+          // e.printStackTrace();
+        }
+      }
+    };
 
-    // the light sensor is at its original position, need to start can avoidance
-    // ensure there is enough space for turning
+    colorThread.start();
+    try {
+      colorThread.join();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    if (isTargetCan) {
+      return;
+    }
+
+    // go back to the center
     leftMotor.rotate(-convertDistance(wheelRad, distance), true);
     rightMotor.rotate(-convertDistance(wheelRad, distance), false);
-    flag = 0;
 
   }
 
+  /**
+   * This method starts can grabbing process.
+   */
+  public void startCanGrabbing() {
+
+  }
+
+
+  /**
+   * This method drives the robot to avoid a can.
+   */
   private void canAvoidance() {
-    
-    //turn right 90 degree
-    leftMotor.rotate(convertAngle(wheelRad,track, 90), true);
-    rightMotor.rotate(-convertAngle(wheelRad,track, 90), false);
 
-    leftMotor.rotate(convertDistance(wheelRad, TILE_SIZE *0.7), true);
-    rightMotor.rotate(convertDistance(wheelRad, TILE_SIZE *0.7), false);
+    leftMotor.setSpeed(TURNING_SPEED);
+    rightMotor.setSpeed(TURNING_SPEED);
 
-    //turn left 90 degree
-    leftMotor.rotate(-convertAngle(wheelRad,track, 90), true);
-    rightMotor.rotate(convertAngle(wheelRad,track, 90), false);
-    
-    leftMotor.rotate(convertDistance(wheelRad, TILE_SIZE * 1.3), true);
-    rightMotor.rotate(convertDistance(wheelRad, TILE_SIZE * 1.3), false);
+    // turn right 90 degree
+    leftMotor.rotate(convertAngle(wheelRad, track, 90), true);
+    rightMotor.rotate(-convertAngle(wheelRad, track, 90), false);
 
-    //turn left 90 degree
-    leftMotor.rotate(-convertAngle(wheelRad,track, 90), true);
-    rightMotor.rotate(convertAngle(wheelRad,track, 90), false);
+    leftMotor.setSpeed(FORWARD_SPEED);
+    rightMotor.setSpeed(FORWARD_SPEED + 2);
 
-    leftMotor.rotate(convertDistance(wheelRad, TILE_SIZE *0.7), true);
-    rightMotor.rotate(convertDistance(wheelRad, TILE_SIZE *0.7), false);
+    leftMotor.rotate(convertDistance(wheelRad, TILE_SIZE * 0.7), true);
+    rightMotor.rotate(convertDistance(wheelRad, TILE_SIZE * 0.7), false);
 
-  //turn right 90 degree
-    leftMotor.rotate(convertAngle(wheelRad,track, 90), true);
-    rightMotor.rotate(-convertAngle(wheelRad,track, 90), false);
-
-    // pass through the can continue the navigation
+    // leftMotor.setSpeed(TURNING_SPEED);
+    // rightMotor.setSpeed(TURNING_SPEED);
+    //
+    // // turn left 90 degree
+    // leftMotor.rotate(-convertAngle(wheelRad, track, 90), true);
+    // rightMotor.rotate(convertAngle(wheelRad, track, 90), false);
+    //
+    // leftMotor.setSpeed(FORWARD_SPEED);
+    // rightMotor.setSpeed(FORWARD_SPEED + 2);
+    //
+    // leftMotor.rotate(convertDistance(wheelRad, TILE_SIZE * 1.5), true);
+    // rightMotor.rotate(convertDistance(wheelRad, TILE_SIZE * 1.5), false);
+    //
+    // leftMotor.setSpeed(TURNING_SPEED);
+    // rightMotor.setSpeed(TURNING_SPEED);
+    //
+    // // turn left 90 degree
+    // leftMotor.rotate(-convertAngle(wheelRad, track, 90), true);
+    // rightMotor.rotate(convertAngle(wheelRad, track, 90), false);
+    //
+    // leftMotor.setSpeed(FORWARD_SPEED);
+    // rightMotor.setSpeed(FORWARD_SPEED + 2);
+    //
+    // leftMotor.rotate(convertDistance(wheelRad, TILE_SIZE * 0.7), true);
+    // rightMotor.rotate(convertDistance(wheelRad, TILE_SIZE * 0.7), false);
+    //
+    // leftMotor.setSpeed(TURNING_SPEED);
+    // rightMotor.setSpeed(TURNING_SPEED);
+    //
+    // // turn right 90 degree
+    // leftMotor.rotate(convertAngle(wheelRad, track, 90), true);
+    // rightMotor.rotate(-convertAngle(wheelRad, track, 90), false);
+    //
+    // // pass through the can continue the navigation
+    // double yCoordinate = Math.round(((float) odo.getXYT()[1] / (float) TILE_SIZE));
+    // if (yCoordinate == URY || yCoordinate == LLY)
+    // aCanOnBoundary = true;
   }
 
+  /**
+   * This method drives the robot to leave the searching area.
+   */
+  public void leaveSearchingArea() {
+
+  }
+
+  /**
+   * This method checks whether the robot has reached the current destination.
+   * 
+   * @return false if hasn't reached the current destination; true otherwise
+   */
+  public boolean checkIfDone(double destinationX, double destinationY) {
+    double pos[] = odo.getXYT();
+    if (Math.abs(destinationX * TILE_SIZE - pos[0]) < navigationAccuracy
+        && Math.abs(destinationY * TILE_SIZE - pos[1]) < navigationAccuracy) {
+      //y offset
+      // leftMotor.rotate(convertDistance(wheelRad, 1.5),true);
+      // rightMotor.rotate(convertDistance(wheelRad,1.5), false);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+
+
+  /**
+   * This method fetches data from the ultraconic sensor and update the distance.
+   */
   @Override
   public void timedOut() {
     sampleProvider.fetchSample(sample, 0); // distance from ultrasonic sensor in m
-    int distance = (int) (sample[0] * 100); // convert to cm
-    //System.out.println("distance in timeout " + distance);
-    
-    if (distance < 10 && distance >2) {
-      // detect a can, stop the navigation and get ready for color detection
-      Sound.beep();
-      flag = 1;
-      // TODO: is stop() needed?
-      leftMotor.stop();
-      rightMotor.stop();
+    usDistance = (int) (sample[0] * 100); // convert to cm
+
+    if (state == State.SCANNING) {
+      int filter_control = 15;
+      int boundary = 32 * 2;
+      if (usDistance < boundary) {
+
+        if (filter_count == 0) {
+          previousUsDistance = usDistance;
+          dataset = new ArrayList<Double>();
+        }
+
+        if (Math.abs(previousUsDistance - usDistance) < 5) {
+          filter_count++;
+          dataset.add(odo.getXYT()[2]);
+
+          if (filter_count == 4) {
+            Sound.beep();
+          }
+
+        } else {
+          filter_count = 0;
+
+          if (dataset.size() >= filter_control) {
+            // int mid = dataset.size()/2;
+            double midTheta = (dataset.get(0) + dataset.get(dataset.size() - 1)) / 2;
+            canLocation.add(midTheta);
+          }
+          dataset = new ArrayList<Double>();
+        }
+      } else {
+        // outside of boundary
+
+        filter_count = 0;
+
+        if (dataset.size() >= filter_control) {
+          double midTheta = (dataset.get(0) + dataset.get(dataset.size() - 1)) / 2;
+          canLocation.add(midTheta);
+        }
+        dataset = new ArrayList<Double>();
+      }
     }
+    previousUsDistance = usDistance;
+  }
+
+
+
+  public void scan() {
+
+    leftMotor.setSpeed(TURNING_SPEED);
+    rightMotor.setSpeed(TURNING_SPEED);
+    leftMotor.rotate(convertAngle(wheelRad, track, 360), true);
+    rightMotor.rotate(-convertAngle(wheelRad, track, 360), false);
+
+    timer.stop();
+
+    try {
+      Thread.sleep(2000);
+    } catch (InterruptedException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    for (Double data : canLocation) {
+      lcd.drawString(Double.toString(data), 0, 0);
+      System.out.println(Double.toString(data));
+      turnTo(data - 3);
+      Sound.beep();
+      sampleProvider.fetchSample(sample, 0);
+      usDistance = (int) (sample[0] * 100); // convert to cm
+      System.out.println(usDistance);
+      startColorDetection();
+    }
+
+
+
+  }
+
+  public void navigateToSearchingArea(int LL_X, int LL_Y, int UR_X, int UR_Y, int corner, int SZ_X,
+      int SZ_Y) {
+    double[][] destinations = {{0, 0}, {0, 0}, {0, 0}};
+    if (LL_Y + 2 == UR_Y && LL_X + 1 == UR_X) {
+      if (corner == 2 || corner == 3) {
+        destinations[0][0] = LL_X + 0.45;
+        destinations[0][1] = UR_Y + 0.5;
+        destinations[1][0] = LL_X + 0.45;
+        destinations[1][1] = LL_Y - 0.5;
+      } else if (corner == 1 || corner == 0) {
+        destinations[0][0] = LL_X + 0.55;
+        destinations[0][1] = LL_Y - 0.5;
+        destinations[1][0] = LL_X + 0.55;
+        destinations[1][1] = UR_Y + 0.5;
+      }
+    } else if (LL_Y + 1 == UR_Y && LL_X + 2 == UR_X) {
+      if (corner == 1 || corner == 2) {
+        destinations[0][0] = UR_X + 0.5;
+        destinations[0][1] = UR_Y - 0.45;
+        destinations[1][0] = LL_X - 0.5;
+        destinations[1][1] = UR_Y - 0.45;
+      } else if (corner == 0 || corner == 3) {
+        destinations[0][0] = LL_X - 0.5;
+        destinations[0][1] = LL_Y + 0.45;
+        destinations[1][0] = UR_X + 0.5;
+        destinations[1][1] = LL_Y + 0.45;
+      }
+    }
+
+    destinations[2][0] = SZ_X;
+    destinations[2][1] = SZ_Y;
+
+    for (int i = 0; i < 3; i++) {
+      while (!checkIfDone(destinations[i][0], destinations[i][1])) {
+        travelTo(destinations[i][0], destinations[i][1]);
+      }
+      leftMotor.rotate(convertDistance(wheelRad, 2), true);
+      rightMotor.rotate(convertDistance(wheelRad, 2), false);
+    }
+    turnTo(0);
+    leftMotor.stop(true);
+    rightMotor.stop(false);
   }
 
 }
+

@@ -3,6 +3,8 @@ package ca.mcgill.ecse211.entryPoint;
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
 import ca.mcgill.ecse211.colorClassification.ColorClassification;
+import ca.mcgill.ecse211.odometer.Odometer;
+import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
@@ -12,24 +14,70 @@ public class Lab5 {
   public static EV3LargeRegulatedMotor sensorMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
   public static final TextLCD lcd = LocalEV3.get().getTextLCD();
   public static final int TR = -1;  //0: red can, 1: green can, 2: yellow can, 3: blue can 
+    
+  public static EV3MediumRegulatedMotor canGrabbingMotor = new EV3MediumRegulatedMotor(LocalEV3.get().getPort("D"));
   
+  public static EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
+  public static EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
+
+  private static Port sensorPort = LocalEV3.get().getPort("S1");
+  private static SensorModes us = new EV3UltrasonicSensor(sensorPort);
+  private static SampleProvider sampleProvider = us.getMode("Distance");
+
+  //for correction
+  private static final Port rightLightPort = LocalEV3.get().getPort("S3");
+  private static final SensorModes rightLightMode = new EV3ColorSensor(rightLightPort);
+  private static SampleProvider rightLightSampleProvider = rightLightMode.getMode("Red");
+  
+  private static final Port leftLightPort = LocalEV3.get().getPort("S2");
+  private static final SensorModes leftLightMode = new EV3ColorSensor(leftLightPort);
+  private static SampleProvider leftLightSampleProvider = leftLightMode.getMode("Red");
+  
+  private static int LL_X = 2;
+  private static int LL_Y = 2;
+  private static int UR_X = 4;
+  private static int UR_Y = 3;
+  private static int corner = 0;
+  private static int SZ_LL_X = 6;
+  private static int SZ_LL_Y = 0;
+  private static int SZ_UR_X = 14;
+  private static int SZ_UR_Y = 5;
+  
+  private static double track = 11.99;
+  private static double radius = 2.06;
+  
+
   /**
    * the entry point of the whole program. Run this class to start color detection at stationary position
    * @param str
    */
   public static void main(String str[]) {
-    final ColorClassification colorClassification = new ColorClassification(sensorMotor, lcd, TR);
-    //System.out.println("initialize");
-    new Thread() {
-      public void run() {
-        try {
-          colorClassification.colorClassify();
-        } catch (InterruptedException e) {
-          //e.printStackTrace();
-        }
-      }
-      }.start();
-      System.out.println("exit");   
+//    final ColorClassification colorClassification = new ColorClassification(sensorMotor, lcd, TR);
+//    //System.out.println("initialize");
+//    new Thread() {
+//      public void run() {
+//        try {
+//          colorClassification.colorClassify();
+//        } catch (InterruptedException e) {
+//          //e.printStackTrace();
+//        }
+//      }
+//      }.start();
+//      System.out.println("exit");   
+    
+    Odometer odometer;
+    odometer = Odometer.getOdometer(leftMotor, rightMotor);
+    Thread odoThread = new Thread(odometer);
+    odoThread.start();
+    
+    int angle = (int) ((180.0 * Math.PI * track * 360 / 360.0) / (Math.PI * radius));
+    
+    leftMotor.rotate((int) angle, true);
+    rightMotor.rotate(- angle, true);
+    
+    while(leftMotor.isMoving()) {
+      System.out.println(odometer.getXYT()[2]);
+    }
   }
   
 }
