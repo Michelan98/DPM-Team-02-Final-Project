@@ -1,4 +1,4 @@
-package ca.mcgill.ecse211.WiFi;
+package ca.mcgill.ecse211.WiFiClientExample;
 
 import java.util.Map;
 import ca.mcgill.ecse211.entryPoint.Lab5;
@@ -29,28 +29,17 @@ import lejos.hardware.Button;
  * @author Michael Smith, Tharsan Ponnampalam
  *
  */
-public class WiFi {
+public class WiFiExample {
 
   // ** Set these as appropriate for your team and current situation **
   private static final String SERVER_IP = "192.168.2.8";
   private static final int TEAM_NUMBER = 2;
 
   // Enable/disable printing of debug info from the WiFi class
-  private static final boolean ENABLE_DEBUG_WIFI_PRINT = false;
-  
-  // creating Map data variable
-  private static Map data;
-  
+  private static final boolean ENABLE_DEBUG_WIFI_PRINT = true;
 
   @SuppressWarnings("rawtypes")
-  public WiFi() {
-	  // store the data collected
-	  WiFi.getData();
-	  
-	  // clear Console
-	  System.out.flush();
-  }
-  public static void getData() {
+  public static void main(String[] args) {
 
     System.out.println("Running..");
 
@@ -70,8 +59,27 @@ public class WiFi {
        * will receive a message saying an invalid team number was specified and getData() will throw
        * an exception letting you know.
        */
-       data = conn.getData();
-       
+      Map data = conn.getData();
+
+      // Example 1: Print out all received data
+      System.out.println("Map:\n" + data);
+
+      // Example 2 : Print out specific values
+      int redTeam = ((Long) data.get("RedTeam")).intValue();
+      System.out.println("Red Team: " + redTeam);
+
+      int redCorner = ((Long) data.get("RedCorner")).intValue();
+      System.out.println("RedCorner: " + redCorner);
+
+      // Example 3: Compare value
+      int tnr_ll_x =  ((Long) data.get("TNR_LL_x")).intValue();
+      if (tnr_ll_x < 5) {
+        System.out.println("Red Tunnel LL corner X < 5");
+      }
+      else {
+        System.out.println("Red Tunnel LL corner X >= 5");
+      }
+
     } catch (Exception e) {
       System.err.println("Error: " + e.getMessage());
     }
