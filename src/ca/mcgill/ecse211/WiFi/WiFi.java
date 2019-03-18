@@ -1,8 +1,9 @@
-package ca.mcgill.ecse211.WiFiClientExample;
+package ca.mcgill.ecse211.WiFi;
 
 import java.util.Map;
 
 import ca.mcgill.ecse211.WiFiClient.WifiConnection;
+import ca.mcgill.ecse211.entryPoint.Lab5;
 import lejos.hardware.Button;
 
 /**
@@ -29,17 +30,18 @@ import lejos.hardware.Button;
  * @author Michael Smith, Tharsan Ponnampalam
  *
  */
-public class WiFiExample {
+public class WiFi {
 
   // ** Set these as appropriate for your team and current situation **
   private static final String SERVER_IP = "192.168.2.8";
   private static final int TEAM_NUMBER = 2;
-
+  
+  private static Map data;
   // Enable/disable printing of debug info from the WiFi class
-  private static final boolean ENABLE_DEBUG_WIFI_PRINT = true;
+  private static final boolean ENABLE_DEBUG_WIFI_PRINT = false;
 
   @SuppressWarnings("rawtypes")
-  public static void main(String[] args) {
+  public static void getData() {
 
     System.out.println("Running..");
 
@@ -59,30 +61,54 @@ public class WiFiExample {
        * will receive a message saying an invalid team number was specified and getData() will throw
        * an exception letting you know.
        */
-      Map data = conn.getData();
-
-      // Example 1: Print out all received data
-      System.out.println("Map:\n" + data);
-
-      // Example 2 : Print out specific values
-      int redTeam = ((Long) data.get("RedTeam")).intValue();
-      System.out.println("Red Team: " + redTeam);
-
-      int redCorner = ((Long) data.get("RedCorner")).intValue();
-      System.out.println("RedCorner: " + redCorner);
-
-      // Example 3: Compare value
-      int tnr_ll_x =  ((Long) data.get("TNR_LL_x")).intValue();
-      if (tnr_ll_x < 5) {
-        System.out.println("Red Tunnel LL corner X < 5");
-      }
-      else {
-        System.out.println("Red Tunnel LL corner X >= 5");
-      }
+       data = conn.getData();
 
     } catch (Exception e) {
       System.err.println("Error: " + e.getMessage());
     }
+    
+    Lab5.RedTeam = ((Long) data.get("RedTeam")).intValue();
+    Lab5.GreenTeam = ((Long) data.get("GreenTeam")).intValue();
+    
+    Lab5.redCorner= ((Long) data.get("RedCorner")).intValue();
+    Lab5.greenCorner= ((Long) data.get("GreenCorner")).intValue();
+    
+    Lab5.Red_UR_x = ((Long) data.get("Red_UR_x")).intValue();
+    Lab5.Red_LLx = ((Long) data.get("Red_LL_x")).intValue();
+    Lab5.Red_UR_y= ((Long) data.get("Red_UR_y")).intValue();
+    Lab5.Red_LL_y= ((Long) data.get("Red_LL_y")).intValue();
+    
+    Lab5.Green_UR_x= ((Long) data.get("Green_UR_x")).intValue();
+    Lab5.Green_LL_x= ((Long) data.get("Green_LL_x")).intValue();
+    Lab5.Green_UR_y = ((Long) data.get("Green_UR_y")).intValue();
+    Lab5.Green_LL_y= ((Long) data.get("Green_LL_y")).intValue();
+    
+    Lab5.Island_UR_x = ((Long) data.get("Island_UR_x")).intValue();
+    Lab5.Island_LL_x= ((Long) data.get("Island_LL_x")).intValue();
+    Lab5.Island_UR_y = ((Long) data.get("Island_UR_y")).intValue();
+    Lab5.Island_LL_y = ((Long) data.get("Island_LL_y")).intValue();
+    
+    Lab5.TNR_LL_x = ((Long) data.get("TNR_LL_x")).intValue();
+    Lab5.TNR_UR_x = ((Long) data.get("TNR_UR_x")).intValue();
+    Lab5.TNR_LL_y = ((Long) data.get("TNR_LL_y")).intValue();
+    Lab5.TNR_UR_y = ((Long) data.get("TNR_UR_y")).intValue();
+    
+    Lab5.TNG_LL_x = ((Long) data.get("TNG_LL_x")).intValue();
+    Lab5.TNG_UR_x = ((Long) data.get("TNG_UR_x")).intValue();
+    Lab5.TNG_LL_y= ((Long) data.get("TNG_LL_y")).intValue();
+    Lab5.TNG_UR_y= ((Long) data.get("TNG_UR_y")).intValue();
+    
+    Lab5.SZR_UR_x = ((Long) data.get("SZR_UR_x")).intValue();
+    Lab5.SZR_UR_y = ((Long) data.get("SZR_UR_y")).intValue(); 
+    
+    Lab5.SZG_UR_x = ((Long) data.get("SZG_UR_x")).intValue();
+    Lab5.SZG_UR_y = ((Long) data.get("SZG_UR_y")).intValue();
+    
+    Lab5.SZR_LL_x = ((Long) data.get("SZR_LL_x")).intValue();
+    Lab5.SZR_LL_y = ((Long) data.get("SZR_LL_y")).intValue(); 
+    
+    Lab5.SZG_LL_x = ((Long) data.get("SZG_LL_x")).intValue();
+    Lab5.SZG_LL_y = ((Long) data.get("SZG_LL_y")).intValue();
 
     // Wait until user decides to end program
     Button.waitForAnyPress();
