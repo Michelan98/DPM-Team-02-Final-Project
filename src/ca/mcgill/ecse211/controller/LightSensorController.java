@@ -11,18 +11,16 @@ public class LightSensorController {
 	private float[] colorValue;
 	
 	private float colorIntensity;
-	private TextLCD lcd;
 	
 	/**
 	 * This method is a constructor for this class
 	 * @param lightSensor light sensor to use
 	 * @param lcd lcd screen on the ev3 block
 	 */
-	public LightSensorController(EV3ColorSensor lightSensor, TextLCD lcd) {
+	public LightSensorController(EV3ColorSensor lightSensor) {
 		this.lightSensor = lightSensor;
 		idColour = this.lightSensor.getRedMode();
 		colorValue = new float[idColour.sampleSize()];
-		this.lcd = lcd;
 	}
 	
 	/**

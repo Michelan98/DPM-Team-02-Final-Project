@@ -5,6 +5,7 @@ import ca.mcgill.ecse211.controller.LightSensorController;
 import lejos.hardware.Sound;
 import lejos.hardware.lcd.LCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import ca.mcgill.ecse211.entryPoint.*;
 
 public class OdometryCorrection {
 	// Constants
@@ -12,7 +13,8 @@ public class OdometryCorrection {
 	private static final int ROTATE_SPEED = 80;
 	private static final double TILE_SIZE = 30.48;
 	private static final double WHEEL_RADIUS = 2.1;
-	private static final double DISTANCE_TO_SENSOR = 13.9;
+	public static final double DISTANCE_TO_SENSOR = 13.9;
+	 
 	// Left and right light sensors
 	private LightSensorController leftLightSensor;
 	private LightSensorController rightLightSensor;
@@ -184,8 +186,7 @@ public class OdometryCorrection {
 	 */
 	public void resetMotors() {
 		// reset the motor
-		leftMotor.stop(true);
-		rightMotor.stop(false);
+		stopMotors();
 		for (EV3LargeRegulatedMotor motor : new EV3LargeRegulatedMotor[] { leftMotor, rightMotor }) {
 			motor.setAcceleration(3000);
 		}
@@ -236,4 +237,56 @@ public class OdometryCorrection {
 		rightMotor.forward();
 		leftMotor.endSynchronization();
 	}
+	
+	/**
+	 * helper method to stop moving motors
+	 */
+	public void stopMoving(boolean stopLeft, boolean stopRight) {
+		if (stopLeft)
+			leftMotor.stop();
+		if (stopRight)
+			rightMotor.stop();
+	}
+	
+	/**
+	 * helper for stopping both motors
+	 * 
+	 */
+	public void stopMotors() {
+		leftMotor.stop();
+		rightMotor.stop();
+		
+	}
+	
+	/**
+	 * This method allows the conversion of a angle to the total rotation of each
+	 * wheel need to cover that distance.
+	 * 
+	 * @param radius radius of wheel 
+	 * @param width track of robot
+	 * @param angle angle desired to turn the robot by
+	 * @return the angle the robot needs to turn each wheel to rotate
+	 */
+	public static int convertAngle(double radius, double width, double angle) {
+		return convertDistance(radius, Math.PI * width * angle / 360.0);
+	}
+	
+	/**
+	 * direction = true --> clockwwise direction
+	 * 
+	 * @param theta
+	 * @param direction
+	 */
+	public void turnBy(double theta, boolean direction) {
+		if(direction) {
+			leftMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, theta), true);
+			rightMotor.rotate(-convertAngle(WHEEL_RAD, TRACK, theta), false);
+		}
+		else {
+			leftMotor.rotate(-convertAngle(WHEEL_RAD, TRACK, theta), true);
+			rightMotor.rotate(convertAngle(WHEEL_RAD, TRACK, theta), false);
+		}			
+		}
+	}
+	
 }
