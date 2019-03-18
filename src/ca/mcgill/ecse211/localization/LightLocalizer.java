@@ -39,7 +39,7 @@ public class LightLocalizer {
 	private static LightSensorController leftLightSensor;
 	private static LightSensorController rightLightSensor;
 
-	private double color = 0.30;
+	private double color = 0.25;
 	
 	/**
 	 * Constructor for the LightLocalizer class
@@ -61,24 +61,24 @@ public class LightLocalizer {
 	public void startLocalize() {
 		
 		// start moving forward
-		odometerCorrection.setSpeeds(150, 150);
+		odometerCorrection.setSpeeds(80, 80);
 		
 		odometerCorrection.moveForward();
 		
 		// correcting with the light sensors on the grid lines
 		correct();
 		
-		odometerCorrection.travelDistance(DISTANCE_TO_SENSOR, 150);
+		odometerCorrection.travelDistance(-DISTANCE_TO_SENSOR, 150);
 		
 		// turning clockwise for direction = true
 		odometerCorrection.turnBy(90, true);
 		
-		odometerCorrection.setSpeeds(150, 150);
+		odometerCorrection.setSpeeds(80, 80);
 		odometerCorrection.moveForward();
 		
 		correct();
 		
-		odometerCorrection.travelDistance(DISTANCE_TO_SENSOR, 150);
+		odometerCorrection.travelDistance(-DISTANCE_TO_SENSOR, 150);
 		odometerCorrection.turnBy(90, true);
 		
 		// beeps three times when parallel to wall

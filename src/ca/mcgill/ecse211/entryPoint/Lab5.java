@@ -22,14 +22,17 @@ import ca.mcgill.ecse211.WiFi.*;
 
 public class Lab5 {
 
-  public static EV3LargeRegulatedMotor sensorMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
+  public static EV3LargeRegulatedMotor sensorMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("C"));
   public static final TextLCD lcd = LocalEV3.get().getTextLCD();
   public static final int TR = -1;  //0: red can, 1: green can, 2: yellow can, 3: blue can 
     
-  public static EV3MediumRegulatedMotor canGrabbingMotor = new EV3MediumRegulatedMotor(LocalEV3.get().getPort("D"));
-  
-  public static EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
-  public static EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
+  public static EV3MediumRegulatedMotor canGrabbingMotor =
+      new EV3MediumRegulatedMotor(LocalEV3.get().getPort("D"));
+
+  public static EV3LargeRegulatedMotor leftMotor =
+      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
+  public static EV3LargeRegulatedMotor rightMotor =
+      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
 
   private static Port sensorPort = LocalEV3.get().getPort("S1");
   private static SensorModes us = new EV3UltrasonicSensor(sensorPort);
@@ -90,11 +93,17 @@ public class Lab5 {
 //      }.start();
 //      System.out.println("exit");   
     
-    WiFi.getData();
-    Odometer odometer;
-    odometer = Odometer.getOdometer(leftMotor, rightMotor);
-    Thread odoThread = new Thread(odometer);
-    odoThread.start();    
+//    WiFi.getData();
+    Odometer odometer =null;
+    try {
+      odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD);
+      Thread odoThread = new Thread(odometer);
+      odoThread.start();    
+    } catch (OdometerExceptions e1) {
+      // TODO Auto-generated catch block
+      e1.printStackTrace();
+    }
+
 
     leftLightSensor = new LightSensorController(leftLightMode);
     rightLightSensor = new LightSensorController(rightLightMode);
@@ -102,13 +111,12 @@ public class Lab5 {
     OdometryCorrection odometryCorrection = new OdometryCorrection(odometer, leftMotor, rightMotor,leftLightSensor, rightLightSensor );
     
     LightLocalizer lightLocalizer = new LightLocalizer(odometer, leftLightSensor, rightLightSensor, odometryCorrection);
-    try {
-      UltrasonicLocalizer usLocalizer = new UltrasonicLocalizer(sampleProvider);
-      usLocalizer.fallingEdge();
-    } catch (OdometerExceptions e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
+//    try {
+//      UltrasonicLocalizer usLocalizer = new UltrasonicLocalizer(sampleProvider);
+//      usLocalizer.fallingEdge();
+//    } catch (OdometerExceptions e) {
+//      e.printStackTrace();
+//    }
     
     lightLocalizer.startLocalize();
     

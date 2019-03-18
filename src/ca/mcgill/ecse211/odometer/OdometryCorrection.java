@@ -12,7 +12,7 @@ public class OdometryCorrection {
   private static final int FORWARD_SPEED = 150;
   private static final int ROTATE_SPEED = 80;
   private static final double TILE_SIZE = 30.48;
-  public static final double DISTANCE_TO_SENSOR = 13.9;
+  public static final double DISTANCE_TO_SENSOR = 11.3;
 
   // Left and right light sensors
   private LightSensorController leftLightSensor;
@@ -251,10 +251,13 @@ public class OdometryCorrection {
    * helper method to stop moving motors
    */
   public void stopMoving(boolean stopLeft, boolean stopRight) {
+    leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] {rightMotor});
+    leftMotor.startSynchronization();
     if (stopLeft)
       leftMotor.stop();
     if (stopRight)
       rightMotor.stop();
+    leftMotor.endSynchronization();
   }
 
   /**
