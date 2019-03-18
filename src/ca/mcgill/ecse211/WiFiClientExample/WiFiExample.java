@@ -1,7 +1,7 @@
 package ca.mcgill.ecse211.WiFiClientExample;
 
 import java.util.Map;
-
+import ca.mcgill.ecse211.entryPoint.Lab5;
 import ca.mcgill.ecse211.WiFiClient.WifiConnection;
 import lejos.hardware.Button;
 
@@ -83,6 +83,49 @@ public class WiFiExample {
     } catch (Exception e) {
       System.err.println("Error: " + e.getMessage());
     }
+    
+    Lab5.RedTeam = ((Long) data.get("RedTeam")).intValue();
+    Lab5.GreenTeam = ((Long) data.get("GreenTeam")).intValue();
+    
+    Lab5.redCorner= ((Long) data.get("RedCorner")).intValue();
+    Lab5.greenCorner= ((Long) data.get("GreenCorner")).intValue();
+    
+    Lab5.Red_UR_x = ((Long) data.get("Red_UR_x")).intValue();
+    Lab5.Red_LLx = ((Long) data.get("Red_LL_x")).intValue();
+    Lab5.Red_UR_y= ((Long) data.get("Red_UR_y")).intValue();
+    Lab5.Red_LL_y= ((Long) data.get("Red_LL_y")).intValue();
+    
+    Lab5.Green_UR_x= ((Long) data.get("Green_UR_x")).intValue();
+    Lab5.Green_LL_x= ((Long) data.get("Green_LL_x")).intValue();
+    Lab5.Green_UR_y = ((Long) data.get("Green_UR_y")).intValue();
+    Lab5.Green_LL_y= ((Long) data.get("Green_LL_y")).intValue();
+    
+    Lab5.Island_UR_x = ((Long) data.get("Island_UR_x")).intValue();
+    Lab5.Island_LL_x= ((Long) data.get("Island_LL_x")).intValue();
+    Lab5.Island_UR_y = ((Long) data.get("Island_UR_y")).intValue();
+    Lab5.Island_LL_y = ((Long) data.get("Island_LL_y")).intValue();
+    
+    Lab5.TNR_LL_x = ((Long) data.get("TNR_LL_x")).intValue();
+    Lab5.TNR_UR_x = ((Long) data.get("TNR_UR_x")).intValue();
+    Lab5.TNR_LL_y = ((Long) data.get("TNR_LL_y")).intValue();
+    Lab5.TNR_UR_y = ((Long) data.get("TNR_UR_y")).intValue();
+    
+    Lab5.TNG_LL_x = ((Long) data.get("TNG_LL_x")).intValue();
+    Lab5.TNG_UR_x = ((Long) data.get("TNG_UR_x")).intValue();
+    Lab5.TNG_LL_y= ((Long) data.get("TNG_LL_y")).intValue();
+    Lab5.TNG_UR_y= ((Long) data.get("TNG_UR_y")).intValue();
+    
+    Lab5.SZR_UR_x = ((Long) data.get("SZR_UR_x")).intValue();
+    Lab5.SZR_UR_y = ((Long) data.get("SZR_UR_y")).intValue(); 
+    
+    Lab5.SZG_UR_x = ((Long) data.get("SZG_UR_x")).intValue();
+    Lab5.SZG_UR_y = ((Long) data.get("SZG_UR_y")).intValue();
+    
+    Lab5.SZR_LL_x = ((Long) data.get("SZR_LL_x")).intValue();
+    Lab5.SZR_LL_y = ((Long) data.get("SZR_LL_y")).intValue(); 
+    
+    Lab5.SZG_LL_x = ((Long) data.get("SZG_LL_x")).intValue();
+    Lab5.SZG_LL_y = ((Long) data.get("SZG_LL_y")).intValue();
 
     // Wait until user decides to end program
     Button.waitForAnyPress();

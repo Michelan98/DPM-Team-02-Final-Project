@@ -1,4 +1,5 @@
 package ca.mcgill.ecse211.entryPoint;
+
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
 import ca.mcgill.ecse211.colorClassification.ColorClassification;
@@ -7,20 +8,13 @@ import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
-import lejos.hardware.motor.EV3MediumRegulatedMotor;
-import lejos.hardware.port.Port;
-import lejos.hardware.sensor.EV3ColorSensor;
-import lejos.hardware.sensor.EV3UltrasonicSensor;
-import lejos.hardware.sensor.SensorModes;
-import lejos.robotics.SampleProvider;
 
 public class Lab5 {
 
-  public static EV3LargeRegulatedMotor sensorMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("C"));
+  public static EV3LargeRegulatedMotor sensorMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
   public static final TextLCD lcd = LocalEV3.get().getTextLCD();
   public static final int TR = -1;  //0: red can, 1: green can, 2: yellow can, 3: blue can 
-  
-  
+    
   public static EV3MediumRegulatedMotor canGrabbingMotor = new EV3MediumRegulatedMotor(LocalEV3.get().getPort("D"));
   
   public static EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
@@ -52,6 +46,7 @@ public class Lab5 {
   private static double track = 11.99;
   private static double radius = 2.06;
   
+
   /**
    * the entry point of the whole program. Run this class to start color detection at stationary position
    * @param str
