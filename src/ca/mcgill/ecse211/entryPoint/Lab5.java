@@ -43,8 +43,8 @@ public class Lab5 {
   private static int SZ_UR_X = 14;
   private static int SZ_UR_Y = 5;
   
-  private static double track = 11.99;
-  private static double radius = 2.06;
+  public static double track = 11.99;
+  public static double radius = 2.06;
   
 
   /**
