@@ -78,8 +78,8 @@ public class Lab5 {
   Island_LL_y, TNR_LL_x, TNR_UR_x, TNR_LL_y, TNR_UR_y, TNG_LL_x, TNG_UR_x, TNG_LL_y, TNG_UR_y, 
   SZR_UR_x, SZR_UR_y, SZG_UR_x, SZG_UR_y, SZR_LL_y, SZR_LL_x, SZG_LL_x, SZG_LL_y;
   
-  private static LightSensorController leftLightSensor;
-  private static LightSensorController rightLightSensor;
+  private static final LightSensorController leftLightSensor = new LightSensorController(leftLightMode);
+  private static final LightSensorController rightLightSensor = new LightSensorController(rightLightMode);
   
   public static int ACCELERATION = 300;
 
@@ -104,21 +104,17 @@ public class Lab5 {
       // TODO Auto-generated catch block
       e1.printStackTrace();
     }
-
-    //initialzise sensor controller
-    leftLightSensor = new LightSensorController(leftLightPort);
-    rightLightSensor = new LightSensorController(rightLightPort);
     
     //initialize OdometryCorrection
     OdometryCorrection odometryCorrection = new OdometryCorrection(odometer, leftMotor, rightMotor,leftLightSensor, rightLightSensor );
     
     //initialize and start localization
-    try {
-      UltrasonicLocalizer usLocalizer = new UltrasonicLocalizer(sampleProvider);
-      usLocalizer.fallingEdge();
-    } catch (OdometerExceptions e) {
-      e.printStackTrace();
-    }
+//    try {
+//      UltrasonicLocalizer usLocalizer = new UltrasonicLocalizer(sampleProvider);
+//      usLocalizer.fallingEdge();
+//    } catch (OdometerExceptions e) {
+//      e.printStackTrace();
+//    }
     LightLocalizer lightLocalizer = new LightLocalizer(odometer, leftLightSensor, rightLightSensor, odometryCorrection);
     lightLocalizer.startLocalize();
     

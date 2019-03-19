@@ -161,6 +161,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
             state = State.AVOIDINGCAN;
           }else if (OdometryCorrection.oneLineDetected){
             state = State.CORRECTING;
+            System.out.println("transit to correcting");
           }
           else if (!checkIfDone(currentDestination[0], currentDestination[1])) {
             travelTo(currentDestination[0], currentDestination[1]);
@@ -191,6 +192,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           }
           odometryCorrection.correct(correctedHeading);
           state = State.TRAVELLING;
+          System.out.println("going to travelling");
         }
         case SCANNING: {
           scan();

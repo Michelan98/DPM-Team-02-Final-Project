@@ -35,11 +35,11 @@ public class LightLocalizer {
 	
 	private OdometryCorrection odometerCorrection;
 	
-	// declaring lightSensorController objecfts
+	// declaring lightSensorController objects
 	private static LightSensorController leftLightSensor;
 	private static LightSensorController rightLightSensor;
-
-	private double color = 0.25;
+	
+	//private double color = 0.25;
 	
 	/**
 	 * Constructor for the LightLocalizer class
@@ -99,12 +99,13 @@ public class LightLocalizer {
 
 		// Move the robot until one of the sensors detects a line
 		while (!leftLineDetected && !rightLineDetected ) {
-			if (rightLightSensor.fetch() < color) {
+//	        System.out.println("data"+(newData-lastData));
+			if (rightLightSensor.lineDetected() == true) {
 				rightLineDetected = true;
 				// Stop the right motor
 				odometerCorrection.stopMoving(false, true);
 
-			} else if (leftLightSensor.fetch() < color) {
+			} else if (leftLightSensor.lineDetected() == true) {
 				leftLineDetected = true;
 
 				// Stop the left motor
@@ -115,11 +116,11 @@ public class LightLocalizer {
 		// Keep moving the left/right motor until both lines have been detected
 		while ((!leftLineDetected || !rightLineDetected)) {
 			// If the other line detected, stop the motors
-			if (rightLineDetected && leftLightSensor.fetch() < color) {
+			if (rightLineDetected && leftLightSensor.lineDetected() == true) {
 				leftLineDetected = true;
 				odometerCorrection.stopMotors();
 				
-			} else if (leftLineDetected && rightLightSensor.fetch() < color) {
+			} else if (leftLineDetected && rightLightSensor.lineDetected() == true) {
 				rightLineDetected = true;
 				odometerCorrection.stopMotors();
 			}

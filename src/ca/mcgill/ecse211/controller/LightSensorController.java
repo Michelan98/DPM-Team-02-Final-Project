@@ -18,12 +18,12 @@ import lejos.robotics.SampleProvider;
 public class LightSensorController {
 	
 	private EV3ColorSensor lightSensor;
-	private SensorModes myColor;
+	private SensorMode myColor;
 	private SampleProvider colorSample;
 	private float[] sampleColor ;
 	private int lastData;
 	private int newData;
-	public static final double THRESHOLD = 50;
+	public static final double THRESHOLD = -50;
 	private static int base;
 	private static boolean firstLine = true;
 		
@@ -32,32 +32,38 @@ public class LightSensorController {
 	 * @param lightSensor light sensor to use
 	 * @param lcd lcd screen on the ev3 block
 	 */
-	public LightSensorController(Port colorPort) {
-		myColor = new EV3ColorSensor(colorPort);
-		sampleColor = new float[myColor.sampleSize()];
-		colorSample = myColor.getMode("Red");
+	public LightSensorController(EV3ColorSensor lightSensor) {
+	  
+	     this.lightSensor = lightSensor;
+	     colorSample = lightSensor.getMode("Red");
+//	     myColor = this.lightSensor.getRedMode();
+	  
+//		myColor = new EV3ColorSensor(colorPort);
+	     sampleColor = new float[colorSample.sampleSize()];
+	     
 	}
 	
-	public boolean lineDetected(boolean firstLine) {
-		if(firstLine) {
+	public boolean lineDetected() {
+		if(true) {
 			lastData = fetch();
 		}
 		newData = fetch();
-		
-		if(Math.abs(newData-lastData)  < THRESHOLD) {
+
+      System.out.println("difference"+(newData-lastData));
+		if((newData-lastData) < THRESHOLD) {
 			try {
 				Thread.sleep(15);
 			}catch(InterruptedException e) {
 				e.printStackTrace();
 			}
 			
-			if (Math.abs(fetch() - lastData) < THRESHOLD) {
+			if ((fetch() - lastData) < THRESHOLD) {
 				try {
 					Thread.sleep(15);
 				}catch(InterruptedException e) {
 					e.printStackTrace();
 				}
-				if(Math.abs(fetch() - lastData) < THRESHOLD) {
+				if((fetch() - lastData) < THRESHOLD) {
 					lastData = newData;
 					return true;
 				}
@@ -79,7 +85,7 @@ public class LightSensorController {
 		int sensorData;
 		colorSample.fetchSample(sampleColor, 0);
 		sensorData = (int) (sampleColor[0] * 1000);
-		
+		System.out.println(sensorData);
 		return sensorData;
 	}	
 }
