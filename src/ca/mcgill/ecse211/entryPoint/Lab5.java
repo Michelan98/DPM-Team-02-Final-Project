@@ -20,6 +20,13 @@ import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
 import ca.mcgill.ecse211.WiFi.*;
 
+/**
+ * This class is the entry point of the whole project.
+ * 
+ * @author Michel Abdel Nour
+ * @author Sandra Deng
+ *
+ */
 public class Lab5 {
 
   public static EV3LargeRegulatedMotor sensorMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("C"));

@@ -2,21 +2,28 @@ package ca.mcgill.ecse211.canGrabbing;
 
 import lejos.hardware.motor.EV3MediumRegulatedMotor;
 
+/**
+ * This class is responsible for can grabbing.
+ * 
+ * @author Sandra Deng
+ *
+ */
+
 public class CanGrabbing {
 
   private static EV3MediumRegulatedMotor canGrabbingMotor = null;
-  
+
   public CanGrabbing(EV3MediumRegulatedMotor canGrabbingMotor) {
     this.canGrabbingMotor = canGrabbingMotor;
   }
-  
+
   /**
    * control the medium motor to grab the can
    */
   public void grabCan() {
     canGrabbingMotor.rotate(105);
   }
-  
+
   /**
    * control the medium motor to release the can
    */

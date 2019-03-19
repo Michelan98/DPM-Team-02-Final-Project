@@ -15,6 +15,12 @@ import lejos.robotics.SampleProvider;
 import lejos.utility.Timer;
 import lejos.utility.TimerListener;
 
+/**
+ * This class deals with the navigation system of the robot.
+ * 
+ * @author Sandra Deng
+ *
+ */
 public class NavigationWithObstacle implements TimerListener, Runnable {
   private static final int FORWARD_SPEED = 150;
   private static final int TURNING_SPEED = 70;
@@ -167,7 +173,9 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
         case COLORDETECTION: {
 
           for (Double data : canLocation) {
-            turnTo(data);
+            turnTo(data - 3);
+            sampleProvider.fetchSample(sample, 0);
+            usDistance = (int) (sample[0] * 100); // convert to cm
             startColorDetection();
             // if (isTargetCan) {
             // state = State.GRABBINGCAN;
@@ -259,7 +267,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     } else {
       // x is done
       if (!offsetAdded) {
-        //change the 3 to distanceX?
+        // change the 3 to distanceX?
         leftMotor.rotate(convertDistance(wheelRad, 3), true);
         rightMotor.rotate(convertDistance(wheelRad, 3), false);
         offsetAdded = true;
@@ -487,7 +495,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     double pos[] = odo.getXYT();
     if (Math.abs(destinationX * TILE_SIZE - pos[0]) < navigationAccuracy
         && Math.abs(destinationY * TILE_SIZE - pos[1]) < navigationAccuracy) {
-      //y offset
+      // y offset
       // leftMotor.rotate(convertDistance(wheelRad, 1.5),true);
       // rightMotor.rotate(convertDistance(wheelRad,1.5), false);
       return true;
@@ -550,7 +558,9 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   }
 
 
-
+  /**
+   * The robot will rotate 360 degree to detect whether there are cans.
+   */
   public void scan() {
 
     leftMotor.setSpeed(TURNING_SPEED);
@@ -563,25 +573,36 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     try {
       Thread.sleep(2000);
     } catch (InterruptedException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
 
-    for (Double data : canLocation) {
-      lcd.drawString(Double.toString(data), 0, 0);
-      System.out.println(Double.toString(data));
-      turnTo(data - 3);
-      Sound.beep();
-      sampleProvider.fetchSample(sample, 0);
-      usDistance = (int) (sample[0] * 100); // convert to cm
-      System.out.println(usDistance);
-      startColorDetection();
-    }
+    // for (Double data : canLocation) {
+    // lcd.drawString(Double.toString(data), 0, 0);
+    // System.out.println(Double.toString(data));
+    // turnTo(data - 3);
+    // Sound.beep();
+    // sampleProvider.fetchSample(sample, 0);
+    // usDistance = (int) (sample[0] * 100); // convert to cm
+    // System.out.println(usDistance);
+    // startColorDetection();
+    // }
 
 
 
   }
 
+  /**
+   * This method will navigate the robot to pass the tunnel and reach the lower left corner of the
+   * searching area.
+   * 
+   * @param LL_X: x coordinate of the lower left corner of the tunnel
+   * @param LL_Y: y coordinate of the lower left corner of the tunnel
+   * @param UR_X: x coordinate of the upper right corner of the tunnel
+   * @param UR_Y: y coordinate of the upper right corner of the tunnel
+   * @param corner: corner number of the starting point
+   * @param SZ_X: x coordinate of the lower left corner of the searching area
+   * @param SZ_Y: y coordinate of the lower left corner of the searching area
+   */
   public void navigateToSearchingArea(int LL_X, int LL_Y, int UR_X, int UR_Y, int corner, int SZ_X,
       int SZ_Y) {
     double[][] destinations = {{0, 0}, {0, 0}, {0, 0}};
