@@ -105,8 +105,8 @@ public class Lab5 {
     }
 
 
-    leftLightSensor = new LightSensorController(leftLightMode);
-    rightLightSensor = new LightSensorController(rightLightMode);
+    leftLightSensor = new LightSensorController(leftLightPort);
+    rightLightSensor = new LightSensorController(rightLightPort);
     
     OdometryCorrection odometryCorrection = new OdometryCorrection(odometer, leftMotor, rightMotor,leftLightSensor, rightLightSensor );
     
