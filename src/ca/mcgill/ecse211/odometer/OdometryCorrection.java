@@ -21,6 +21,10 @@ public class OdometryCorrection {
   // Left and right motors
   private EV3LargeRegulatedMotor leftMotor;
   private EV3LargeRegulatedMotor rightMotor;
+  
+  // constants for correction state in Navigation
+  public static boolean oneLineDetected;
+  public static boolean otherLineDetected;
 
 
   private Odometer odometer;
@@ -74,6 +78,10 @@ public class OdometryCorrection {
         // Stop the left motor
       }
     }
+    
+    oneLineDetected = rightLineDetected;
+    otherLineDetected = leftLineDetected;
+    		
 
     // Get the odometer's reading
 
@@ -86,6 +94,9 @@ public class OdometryCorrection {
         rightLineDetected = true;
       }
     }
+    
+    oneLineDetected = rightLineDetected;
+    otherLineDetected = leftLineDetected;
     
     // correcting on theta
     correctOdometer(thetaCorrection);    
