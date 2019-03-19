@@ -23,7 +23,7 @@ public class LightSensorController {
 	private float[] sampleColor ;
 	private int lastData;
 	private int newData;
-	private static final double THRESHOLD = 50;
+	public static final double THRESHOLD = 50;
 	private static int base;
 	private static boolean firstLine = true;
 		
@@ -36,7 +36,6 @@ public class LightSensorController {
 		myColor = new EV3ColorSensor(colorPort);
 		sampleColor = new float[myColor.sampleSize()];
 		colorSample = myColor.getMode("Red");
-		this.lightSensor = lightSensor;
 	}
 	
 	public boolean lineDetected(boolean firstLine) {

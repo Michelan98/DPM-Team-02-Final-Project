@@ -13,6 +13,7 @@ public class OdometryCorrection {
   private static final int ROTATE_SPEED = 80;
   private static final double TILE_SIZE = 30.48;
   public static final double DISTANCE_TO_SENSOR = 11.3;
+  private static final double THRESHOLD = LightSensorController.THRESHOLD;
 
   // Left and right light sensors
   private LightSensorController leftLightSensor;
@@ -22,10 +23,7 @@ public class OdometryCorrection {
   private EV3LargeRegulatedMotor rightMotor;
 
 
-  // Odometer
   private Odometer odometer;
-
-  private double THRESHOLD = 0.30;
 
   /**
    * Construction of the odometryCorrection class
@@ -51,13 +49,13 @@ public class OdometryCorrection {
   }
 
   /**
-   * Correct position and odometer
+   * This class allows the robot to correct its positioning
    * 
    * @param thetaCorrection - orientation at which you want the robot to be/is
    */
   public void correct(double thetaCorrection) {
 
-    travelDistance(-3, 80);
+    travelDistance(-7, 150);
 
 
     boolean rightLineDetected = false;
@@ -88,9 +86,13 @@ public class OdometryCorrection {
         rightLineDetected = true;
       }
     }
-
-    correctOdometer(thetaCorrection);
-
+    
+    // correcting on theta
+    correctOdometer(thetaCorrection);    
+    
+    // preparing for crossing a grid line after correcting
+    resetMotors();  
+    setSpeeds(150, 150);
 
 
   }
