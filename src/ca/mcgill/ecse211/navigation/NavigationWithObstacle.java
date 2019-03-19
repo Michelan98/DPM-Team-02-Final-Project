@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import ca.mcgill.ecse211.colorClassification.ColorClassification;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
+import ca.mcgill.ecse211.odometer.OdometryCorrection;
 import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
@@ -66,7 +67,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   private static int previousUsDistance = 0;
 
   private enum State {
-    INIT, TRAVELLING, SCANNING, COLORDETECTION, AVOIDINGCAN, GRABBINGCAN, LEAVING
+    INIT, TRAVELLING, SCANNING, COLORDETECTION, AVOIDINGCAN, GRABBINGCAN, LEAVING, CORRECTING
   };
 
   private static State state;
@@ -76,10 +77,12 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
   private volatile static ArrayList<Double> canLocation; // the angle of can to the robot
   private static ArrayList<Double> dataset;
+  
+  private static OdometryCorrection odometryCorrection;
 
   public NavigationWithObstacle(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,
       double track, double wheelRad, int LLX, int LLY, int URX, int URY,
-      EV3LargeRegulatedMotor sensorMotor, TextLCD lcd, int TR, SampleProvider sampleProvider)
+      EV3LargeRegulatedMotor sensorMotor, TextLCD lcd, int TR, SampleProvider sampleProvider, OdometryCorrection odometryCorrection)
       throws OdometerExceptions {
 
     odo = Odometer.getOdometer();
@@ -116,6 +119,8 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     // TODO: don't forget to change it to INIT!!
     state = State.INIT;
     dataset = new ArrayList<Double>();
+    
+    this.odometryCorrection = odometryCorrection;
 
   }
 
@@ -127,7 +132,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
     try {
       timer = new Timer(100, new NavigationWithObstacle(leftMotor, rightMotor, track, wheelRad, LLX,
-          LLY, URX, URY, sensorMotor, lcd, TR, sampleProvider));
+          LLY, URX, URY, sensorMotor, lcd, TR, sampleProvider, odometryCorrection));
     } catch (OdometerExceptions e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -135,8 +140,8 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     timer.start();
 
     // travel to the center of the searching area
-    currentDestination[0] = 3;
-    currentDestination[1] = 2;
+    currentDestination[0] = (LLX + URX) /2;
+    currentDestination[1] = (LLY + URY) /2;
 
 
     state = State.INIT;
@@ -154,7 +159,10 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
         case TRAVELLING: {
           if (usDistance < 15 && usDistance > 2) {
             state = State.AVOIDINGCAN;
-          } else if (!checkIfDone(currentDestination[0], currentDestination[1])) {
+          }else if (OdometryCorrection.oneLineDetected){
+            state = State.CORRECTING;
+          }
+          else if (!checkIfDone(currentDestination[0], currentDestination[1])) {
             travelTo(currentDestination[0], currentDestination[1]);
           } else if (checkIfDone(currentDestination[0], currentDestination[1])) {
             turnTo(0);
@@ -165,6 +173,24 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           }
 
           break;
+        }
+        case CORRECTING:{
+          double theta = odo.getXYT()[2];
+          double correctedHeading = 0;
+          if((theta <10 && theta >0) || (theta >350 && theta <360)) {
+            correctedHeading = 0;
+          }
+          else if(theta <100 && theta > 80) {
+            correctedHeading = 90;
+          }
+          else if(theta >170 && theta < 190) {
+            correctedHeading = 180;
+          }
+          else if(theta < 280 && theta >260) {
+            correctedHeading = 270;
+          }
+          odometryCorrection.correct(correctedHeading);
+          state = State.TRAVELLING;
         }
         case SCANNING: {
           scan();
