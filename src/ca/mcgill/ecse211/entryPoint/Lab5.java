@@ -97,7 +97,7 @@ public class Lab5 {
 //      }.start();
 //      System.out.println("exit");   
     
-//    WiFi.getData();
+    WiFi.getData();
     Odometer odometer =null;
     try {
       odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD);

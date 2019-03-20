@@ -50,7 +50,7 @@ public class WiFi {
 	public static int opp_corner, opp_localizeX, opp_localizeY, opp_LL_x, opp_LL_y, opp_UR_x, opp_UR_y, opp_TunLL_x, opp_TunLL_y, opp_TunUR_x, opp_TunUR_y;
 	
 	@SuppressWarnings("rawtypes")
-	public static void wifi()
+	public static void getData()
 	{
 		System.out.println("Running..");
 
