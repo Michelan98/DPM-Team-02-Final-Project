@@ -12,6 +12,7 @@ import ca.mcgill.ecse211.WiFiClient.WifiConnection;
 public class WiFi {
 
 	//set at the beginning
+
 	private static final String SERVER_IP = "192.168.2.11";
 	private static final int TEAM_NUMBER = 2;
 
@@ -22,7 +23,7 @@ public class WiFi {
 	
 	public static final int GRID_X = 9;
 	public static final int GRID_Y = 9;
-		
+
 	//Team numbers
 	private static int redTeam = 0, greenTeam = 0;
 	
@@ -35,7 +36,7 @@ public class WiFi {
 	// Green Team area
 	private static int Green_LL_x = 0, Green_LL_y = 0, Green_UR_x = 0, Green_UR_y = 0;
 	
-	//Island coordinates
+	//Island coordinates (not needed for beta demo)
 	//public static int Island_LL_x = 0, Island_LL_y = 0, Island_UR_x = 0, Island_UR_y = 0;
 
 	// Red Tunnel
@@ -44,15 +45,15 @@ public class WiFi {
 	// Green Tunnel
 	private static int TNG_LL_x = 0, TNG_LL_y = 0, TNG_UR_x = 0, TNG_UR_y = 0;
 	
-	//OUR COORDS
+	// Coordinate variables
 	public static int corner, localizeX, localizeY, LL_x, LL_y, UR_x, UR_y, TunLL_x, TunLL_y, TunUR_x, TunUR_y;
-	
 	public static int opp_corner, opp_localizeX, opp_localizeY, opp_LL_x, opp_LL_y, opp_UR_x, opp_UR_y, opp_TunLL_x, opp_TunLL_y, opp_TunUR_x, opp_TunUR_y;
 	
 	@SuppressWarnings("rawtypes")
 	public static void wifi()
 	{
 		System.out.println("Running..");
+
 
 		// Initialize WifiConnection class
 		WifiConnection conn = new WifiConnection(SERVER_IP, TEAM_NUMBER, ENABLE_DEBUG_WIFI_PRINT);
@@ -78,7 +79,7 @@ public class WiFi {
 			
 			//corners
 			redCorner = ((Long) data.get("RedCorner")).intValue();
-			greenCorner = ((Long) data.get("GreenCorner")).intValue();
+			grenCorner = ((Long) data.get("GreenCorner")).intValue();
 			
 			//red zone
 			Red_LL_x = ((Long) data.get("Red_LL_x")).intValue();
@@ -108,7 +109,7 @@ public class WiFi {
 			TNG_LL_x = ((Long) data.get("TNG_LL_x")).intValue();
 			TNG_LL_y = ((Long) data.get("TNG_LL_y")).intValue();
 			TNG_UR_x = ((Long) data.get("TNG_UR_x")).intValue();
-			TNG_UR_x = ((Long) data.get("TNG_UR_y")).intValue();
+			TNG_UR_y = ((Long) data.get("TNG_UR_y")).intValue();
 			
 			
 			if(redTeam == TEAM_NUMBER)
@@ -138,9 +139,10 @@ public class WiFi {
 	 */
 	private static void assignTeamColor(int color)
 	{
+
 		if(color == 0) // RED
 		{
-			corner = redCorner;
+			corner = redCorner;   
 			LL_x = Red_LL_x;
 			LL_y = Red_LL_y;
 			UR_x = Red_UR_x;
@@ -153,6 +155,14 @@ public class WiFi {
 			setStartingCoordinates(redTeam);
 			
 			opp_corner = greenCorner;
+			TunLL_x = BRR_LL_x;
+			TunLL_y = BRR_LL_y;
+			TunUR_x = BRR_UR_x;
+			TunUR_y = BRR_UR_y;
+
+			setStartingCoordinates(redCorner);
+			
+			opp_corner = greenCorner;
 			opp_LL_x = Green_LL_x;
 			opp_LL_y = Green_LL_y;
 			opp_UR_x = Green_UR_x;
@@ -161,6 +171,7 @@ public class WiFi {
 			opp_TunLL_y = TNG_LL_y;
 			opp_TunUR_x = TNG_UR_x;
 			opp_TunUR_y = TNG_UR_y;
+
 		}
 		else if(color == 1) // GREEN
 		{
@@ -174,9 +185,9 @@ public class WiFi {
 			TunUR_x = TNG_UR_x;
 			TunUR_y = TNG_UR_y;
 
-			setStartingCoordinates(greenTeam);
+			setStartingCoordinates(greenCorner);
 			
-			opp_corner = redTeam;
+			opp_corner = redCorner;
 			opp_LL_x = Red_LL_x;
 			opp_LL_y = Red_LL_y;
 			opp_UR_x = Red_UR_x;
@@ -226,3 +237,5 @@ public class WiFi {
 		}
 	}
 }
+
+
