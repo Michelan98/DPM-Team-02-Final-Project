@@ -46,7 +46,10 @@ public class WiFi {
 	// Green Tunnel
 	private static int TNG_LL_x = 0, TNG_LL_y = 0, TNG_UR_x = 0, TNG_UR_y = 0;
 	
-	//OUR COORDS
+	// variable for target can color 
+	public static int target_color = 0;
+	
+	// variables for coordinates
 	public static int corner, localizeX, localizeY, localizeTheta, LL_x, LL_y, UR_x, UR_y, TunLL_x, TunLL_y, TunUR_x, TunUR_y;
 	
 	public static int opp_corner, opp_localizeX, opp_localizeY, opp_LL_x, opp_LL_y, opp_UR_x, opp_UR_y, opp_TunLL_x, opp_TunLL_y, opp_TunUR_x, opp_TunUR_y;
@@ -76,7 +79,8 @@ public class WiFi {
 			
 			//team numbers
 			redTeam = ((Long) data.get("RedTeam")).intValue();
-			greenTeam = ((Long) data.get("GreenTeam")).intValue();
+			//greenTeam = ((Long) data.get("GreenTeam")).intValue();
+			
 			
 			//corners
 			redCorner = ((Long) data.get("RedCorner")).intValue();
@@ -112,6 +116,9 @@ public class WiFi {
 			TNG_UR_x = ((Long) data.get("TNG_UR_x")).intValue();
 			TNG_UR_x = ((Long) data.get("TNG_UR_y")).intValue();
 			
+			// target can color for beta demo
+			target_color = ((Long) data.get("GreenTeam")).intValue();
+			
 			
 			if(redTeam == TEAM_NUMBER)
 			{
@@ -120,6 +127,8 @@ public class WiFi {
 			else if(greenTeam == TEAM_NUMBER)
 			{
 				assignTeamColor(1);
+				
+				
 			}
 			else
 			{
@@ -129,6 +138,8 @@ public class WiFi {
 		} catch (Exception e) {
 			System.err.println("Error: " + e.getMessage());
 		}
+		
+		
 		
 		System.out.println("Upload Completed!");
 	}
