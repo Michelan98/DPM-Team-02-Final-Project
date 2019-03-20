@@ -47,7 +47,7 @@ public class WiFi {
 	private static int TNG_LL_x = 0, TNG_LL_y = 0, TNG_UR_x = 0, TNG_UR_y = 0;
 	
 	//OUR COORDS
-	public static int corner, localizeX, localizeY, LL_x, LL_y, UR_x, UR_y, TunLL_x, TunLL_y, TunUR_x, TunUR_y;
+	public static int corner, localizeX, localizeY, localizeTheta, LL_x, LL_y, UR_x, UR_y, TunLL_x, TunLL_y, TunUR_x, TunUR_y;
 	
 	public static int opp_corner, opp_localizeX, opp_localizeY, opp_LL_x, opp_LL_y, opp_UR_x, opp_UR_y, opp_TunLL_x, opp_TunLL_y, opp_TunUR_x, opp_TunUR_y;
 	
@@ -206,21 +206,26 @@ public class WiFi {
 		{
 			localizeX = 1;
 			localizeY = 1;
+			localizeTheta = 0;
+			
 		}
 		else if(area == 1)
 		{
 			localizeX = GRID_X - 1;
 			localizeY = 1;	
+			localizeTheta = 0;
 		}
 		else if(area == 2)
 		{
 			localizeX = GRID_X - 1;
 			localizeY = GRID_Y - 1;	
+			localizeTheta = 180;
 		}
 		else if(area == 3)
 		{
 			localizeX = 1;
 			localizeY = GRID_Y - 1;	
+			localizeTheta = 180;
 		}
 		else
 		{

@@ -360,8 +360,8 @@ public class OdometryCorrection {
    * @param direction
    */
   public void turnBy(double theta, boolean direction) {
-    leftMotor.setAcceleration(300);
-    rightMotor.setAcceleration(300);
+//    leftMotor.setAcceleration(300);
+//    rightMotor.setAcceleration(300);
     if (direction) {
       leftMotor.rotate(convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, theta), true);
       rightMotor.rotate(-convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, theta), false);
