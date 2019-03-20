@@ -13,6 +13,13 @@ import lejos.robotics.SampleProvider;
 import lejos.utility.Timer;
 import lejos.utility.TimerListener;
 
+/**
+ * This class implements the ultraconic localizer. The theta in the odometer will be corrected after
+ * the localization.
+ * 
+ * @author Snadra Deng
+ *
+ */
 public class UltrasonicLocalizer implements TimerListener {
   private static SampleProvider usSampleProvider;
   private static float[] usSample;
@@ -26,7 +33,7 @@ public class UltrasonicLocalizer implements TimerListener {
   private static int distance = -1;
 
   private static int k = 3;
-  
+
 
   public UltrasonicLocalizer(SampleProvider sampleProvider) throws OdometerExceptions {
 
@@ -34,7 +41,7 @@ public class UltrasonicLocalizer implements TimerListener {
 
     usSampleProvider = sampleProvider;
     usSample = new float[usSampleProvider.sampleSize()];
-    
+
     Lab5.leftMotor.setAcceleration(Lab5.ACCELERATION);
     Lab5.rightMotor.setAcceleration(Lab5.ACCELERATION);
   }

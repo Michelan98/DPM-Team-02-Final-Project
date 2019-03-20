@@ -16,6 +16,11 @@ import lejos.robotics.SampleProvider;
 import lejos.utility.Timer;
 import lejos.utility.TimerListener;
 
+/**
+ * This class is responsible for can color classification with a rotating light sensor.
+ * @author Sandra Deng
+ *
+ */
 public class ColorClassification implements TimerListener {
 
   private static Port colorPort = LocalEV3.get().getPort("S4");

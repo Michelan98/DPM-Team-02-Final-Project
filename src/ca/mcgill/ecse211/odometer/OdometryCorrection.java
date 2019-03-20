@@ -7,6 +7,12 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import ca.mcgill.ecse211.controller.LightSensorController;
 import ca.mcgill.ecse211.entryPoint.*;
 
+/**
+ * This class is for odometer correction with two light sensors at the back of the robot.
+ * @author Michel Abdel Nour
+ *
+ */
+
 public class OdometryCorrection {
   // Constants
   private static final int FORWARD_SPEED = 150;
