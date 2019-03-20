@@ -10,6 +10,7 @@ import ca.mcgill.ecse211.navigation.NavigationWithObstacle;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import ca.mcgill.ecse211.odometer.OdometryCorrection;
+import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
@@ -106,7 +107,8 @@ public class Lab5 {
     }
     
     //initialize OdometryCorrection
-    OdometryCorrection odometryCorrection = new OdometryCorrection(odometer, leftMotor, rightMotor,leftLightSensor, rightLightSensor );
+    final OdometryCorrection odometryCorrection = new OdometryCorrection(odometer, leftMotor, rightMotor,leftLightSensor, rightLightSensor );
+    
     
     //initialize and start localization
 //    try {
@@ -118,16 +120,28 @@ public class Lab5 {
     LightLocalizer lightLocalizer = new LightLocalizer(odometer, leftLightSensor, rightLightSensor, odometryCorrection);
     lightLocalizer.startLocalize();
     
-    //Testing data
-    int LL_X = 1;
-    int LL_Y = 1;
-    int UR_X = 5;
+//    //Testing data
+    int LL_X = 6;
+    int LL_Y = 4;
+    int UR_X = 6;
     int UR_Y = 5;
- 
-    
-    //localization is done, initialize navigation
+    int TN_LL_X = 3;
+    int TN_LL_Y = 2;
+    int TN_UR_X = 5;
+    int TN_UR_Y = 3;
+    int corner = 0;
+// 
+////    new Thread() {
+////      public void run() {
+////        odometryCorrection.waitingForCorrection();
+////      }
+////    }.start();
+//    
+//    //localization is done, initialize navigation
     try {
-      NavigationWithObstacle navigation = new NavigationWithObstacle(leftMotor, rightMotor, TRACK, WHEEL_RAD, LL_X, LL_Y, UR_X, UR_Y, sensorMotor, lcd, TR, sampleProvider, odometryCorrection);
+      NavigationWithObstacle navigation = new NavigationWithObstacle(leftMotor, rightMotor, TRACK, WHEEL_RAD, TN_LL_X, TN_LL_Y, TN_UR_X, TN_UR_Y, LL_X, LL_Y, UR_X, UR_Y, corner, sensorMotor, lcd, TR, sampleProvider, odometryCorrection);
+      Sound.beep();
+      navigation.navigateToSearchingArea();
       Thread navigationThread = new Thread(navigation);
       navigationThread.start();
     } catch (OdometerExceptions e) {

@@ -65,7 +65,7 @@ public class OdometryCorrection {
    */
   public void correct(double thetaCorrection) {
 
-    travelDistance(-7, 150);
+//    travelDistance(-7, 150);
 
 
     boolean rightLineDetected = false;
@@ -74,11 +74,11 @@ public class OdometryCorrection {
     while (!leftLineDetected && !rightLineDetected) {
       // double rightSample = rightLS.fetch();
       // double leftSample = leftLS.fetch();
-      if (rightLightSensor.lineDetected() == true) {
+      if (rightLightSensor.fetch() < THRESHOLD) {
         rightLineDetected = true;
         // Stop the right motor
 
-      } else if (leftLightSensor.lineDetected() == true) {
+      } else if (leftLightSensor.fetch() < THRESHOLD) {
         leftLineDetected = true;
 
         // Stop the left motor
@@ -94,9 +94,9 @@ public class OdometryCorrection {
     // Keep moving the left/right motor until both lines have been detected
     while ((!leftLineDetected || !rightLineDetected)) {
       // If the other line detected, stop the motors
-      if (rightLineDetected && leftLightSensor.lineDetected() == true) {
+      if (rightLineDetected && leftLightSensor.fetch() < THRESHOLD) {
         leftLineDetected = true;
-      } else if (leftLineDetected && rightLightSensor.lineDetected() == true) {
+      } else if (leftLineDetected && rightLightSensor.fetch() < THRESHOLD) {
         rightLineDetected = true;
       }
     }
@@ -110,6 +110,57 @@ public class OdometryCorrection {
     // preparing for crossing a grid line after correcting
     resetMotors();  
     setSpeeds(150, 150);
+
+
+  }
+  
+  public void waitingForCorrection() {
+
+
+    boolean rightLineDetected = false;
+    boolean leftLineDetected = false;
+
+    while (!leftLineDetected && !rightLineDetected) {
+      // double rightSample = rightLS.fetch();
+      // double leftSample = leftLS.fetch();
+      if (rightLightSensor.fetch() < THRESHOLD) {
+        rightLineDetected = true;
+        // Stop the right motor
+
+      } else if (leftLightSensor.fetch() < THRESHOLD) {
+        leftLineDetected = true;
+
+        // Stop the left motor
+      }
+    }
+    
+    oneLineDetected = rightLineDetected;
+    otherLineDetected = leftLineDetected;
+    
+    System.out.println("waitingForCorrection 1" + oneLineDetected + " 2 "+otherLineDetected);
+            
+
+//    // Get the odometer's reading
+//
+//    // Keep moving the left/right motor until both lines have been detected
+//    while ((!leftLineDetected || !rightLineDetected)) {
+//      // If the other line detected, stop the motors
+//      if (rightLineDetected && leftLightSensor.fetch() < THRESHOLD) {
+//        leftLineDetected = true;
+//      } else if (leftLineDetected && rightLightSensor.fetch() < THRESHOLD) {
+//        rightLineDetected = true;
+//      }
+//    }
+//    
+//    oneLineDetected = rightLineDetected;
+//    otherLineDetected = leftLineDetected;
+//    
+//    // correcting on theta
+//    correctOdometer(thetaCorrection);    
+//    
+//    // preparing for crossing a grid line after correcting
+//    resetMotors();  
+//    setSpeeds(150, 150);
 
 
   }
@@ -309,6 +360,8 @@ public class OdometryCorrection {
    * @param direction
    */
   public void turnBy(double theta, boolean direction) {
+    leftMotor.setAcceleration(300);
+    rightMotor.setAcceleration(300);
     if (direction) {
       leftMotor.rotate(convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, theta), true);
       rightMotor.rotate(-convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, theta), false);
