@@ -10,6 +10,7 @@ import ca.mcgill.ecse211.navigation.NavigationWithObstacle;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import ca.mcgill.ecse211.odometer.OdometryCorrection;
+import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
@@ -82,8 +83,8 @@ public class Lab5 {
    */
  
   
-  private static LightSensorController leftLightSensor;
-  private static LightSensorController rightLightSensor;
+  private static final LightSensorController leftLightSensor = new LightSensorController(leftLightMode);
+  private static final LightSensorController rightLightSensor = new LightSensorController(rightLightMode);
   
   public static int ACCELERATION = 300;
 
@@ -93,7 +94,7 @@ public class Lab5 {
    */
   public static void main(String str[]) { 
     
-    WiFi.getData();
+//    WiFi.getData();
 
     Odometer odometer =null;
     try {
@@ -104,34 +105,49 @@ public class Lab5 {
       // TODO Auto-generated catch block
       e1.printStackTrace();
     }
-
-    //initialzise sensor controller
-    leftLightSensor = new LightSensorController(leftLightPort);
-    rightLightSensor = new LightSensorController(rightLightPort);
     
     //initialize OdometryCorrection
-    OdometryCorrection odometryCorrection = new OdometryCorrection(odometer, leftMotor, rightMotor,leftLightSensor, rightLightSensor );
+    final OdometryCorrection odometryCorrection = new OdometryCorrection(odometer, leftMotor, rightMotor,leftLightSensor, rightLightSensor );
+    
     
     //initialize and start localization
-    try {
-      UltrasonicLocalizer usLocalizer = new UltrasonicLocalizer(sampleProvider);
-      usLocalizer.fallingEdge();
-    } catch (OdometerExceptions e) {
-      e.printStackTrace();
-    }
+//    try {
+//      UltrasonicLocalizer usLocalizer = new UltrasonicLocalizer(sampleProvider);
+//      usLocalizer.fallingEdge();
+//    } catch (OdometerExceptions e) {
+//      e.printStackTrace();
+//    }
+    
+    //TODO: change the localize value based on the data from wifi!!!
     LightLocalizer lightLocalizer = new LightLocalizer(odometer, leftLightSensor, rightLightSensor, odometryCorrection);
-    lightLocalizer.startLocalize();
+    lightLocalizer.startLocalize(0, 0, 0);
+//    lightLocalizer.startLocalize(WiFi.localizeX*TILE_SIZE, WiFi.localizeY*TILE_SIZE, WiFi.localizeTheta);
     
-    //Testing data
-    int LL_X = 1;
-    int LL_Y = 1;
-    int UR_X = 5;
-    int UR_Y = 5;
- 
+//    //Testing data
+    int LL_X = 4;
+    int LL_Y = 6;
+    int UR_X = 6;
+    int UR_Y = 8;
+    int TN_LL_X = 2;
+    int TN_LL_Y = 3;
+    int TN_UR_X = 3;
+    int TN_UR_Y = 5;
+    int corner = 0;
+// 
+////    new Thread() {
+////      public void run() {
+////        odometryCorrection.waitingForCorrection();
+////      }
+////    }.start();
+//    
+//    //localization is done, initialize navigation
     
-    //localization is done, initialize navigation
+    
     try {
-      NavigationWithObstacle navigation = new NavigationWithObstacle(leftMotor, rightMotor, TRACK, WHEEL_RAD, LL_X, LL_Y, UR_X, UR_Y, sensorMotor, lcd, TR, sampleProvider, odometryCorrection);
+      NavigationWithObstacle navigation = new NavigationWithObstacle(leftMotor, rightMotor, TRACK, WHEEL_RAD, TN_LL_X, TN_LL_Y, TN_UR_X, TN_UR_Y, LL_X, LL_Y, UR_X, UR_Y, corner, sensorMotor, lcd, TR, sampleProvider, odometryCorrection, lightLocalizer);
+      Sound.beep();
+
+      navigation.navigateToSearchingArea();
       Thread navigationThread = new Thread(navigation);
       navigationThread.start();
     } catch (OdometerExceptions e) {

@@ -2,6 +2,7 @@ package ca.mcgill.ecse211.navigation;
 
 import java.util.ArrayList;
 import ca.mcgill.ecse211.colorClassification.ColorClassification;
+import ca.mcgill.ecse211.localization.LightLocalizer;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import ca.mcgill.ecse211.odometer.OdometryCorrection;
@@ -44,10 +45,15 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   private int TR = -1;
 
   // (LLX, LLY) and (URX, URY) are from the entry point class
-  private int LLY;
-  private int LLX;
-  private int URX;
-  private int URY;
+  private int SZ_LL_Y;
+  private int SZ_LL_X;
+  private int SZ_UR_X;
+  private int SZ_UR_Y;
+  private int TN_LL_X;
+  private int TN_LL_Y;
+  private int TN_UR_X;
+  private int TN_UR_Y;
+  private int corner;
 
 
   private static Odometer odo = null;
@@ -71,24 +77,28 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   };
 
   private static State state;
-  private final double navigationAccuracy = 3;
+  private final double navigationAccuracy = 2.5;
   private final double thetaAccuracy = 3;
   private boolean offsetAdded = false;
 
   private volatile static ArrayList<Double> canLocation; // the angle of can to the robot
   private static ArrayList<Double> dataset;
-  
-  private static OdometryCorrection odometryCorrection;
+
+  private OdometryCorrection odometryCorrection;
+  private LightLocalizer lightLocalizer;
 
   public NavigationWithObstacle(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,
-      double track, double wheelRad, int LLX, int LLY, int URX, int URY,
-      EV3LargeRegulatedMotor sensorMotor, TextLCD lcd, int TR, SampleProvider sampleProvider, OdometryCorrection odometryCorrection)
+      double track, double wheelRad, int TN_LL_X, int TN_LL_Y, int TN_UR_X, int TN_UR_Y, int LLX,
+      int LLY, int URX, int URY, int cornerNum, EV3LargeRegulatedMotor sensorMotor, TextLCD lcd,
+      int TR, SampleProvider sampleProvider, OdometryCorrection odometryCorrection, LightLocalizer lightLocalizer)
       throws OdometerExceptions {
 
     odo = Odometer.getOdometer();
-    System.out.println(odo.getXYT()[0] + " " + odo.getXYT()[1] + " " + odo.getXYT()[2]);
     this.leftMotor = leftMotor;
     this.rightMotor = rightMotor;
+    
+    this.leftMotor.setAcceleration(500);
+    this.rightMotor.setAcceleration(520);
 
     leftMotor.setSpeed(FORWARD_SPEED);
     rightMotor.setSpeed(FORWARD_SPEED);
@@ -99,13 +109,20 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     this.lcd = lcd;
     this.sensorMotor = sensorMotor;
 
-    this.LLX = LLX;
-    this.LLY = LLY;
-    this.URX = URX;
-    this.URY = URY;
+    this.SZ_LL_X = LLX;
+    this.SZ_LL_Y = LLY;
+    this.SZ_UR_X = URX;
+    this.SZ_UR_Y = URY;
 
-    currentDestination[0] = LLX;
-    currentDestination[1] = LLY;
+    this.TN_LL_X = TN_LL_X;
+    this.TN_LL_Y = TN_LL_Y;
+    this.TN_UR_X = TN_UR_X;
+    this.TN_UR_Y = TN_UR_Y;
+
+    this.corner = cornerNum;
+
+    currentDestination[0] = SZ_LL_X;
+    currentDestination[1] = SZ_LL_Y;
 
     colorClassification = new ColorClassification(sensorMotor, lcd, TR);
 
@@ -119,9 +136,9 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     // TODO: don't forget to change it to INIT!!
     state = State.INIT;
     dataset = new ArrayList<Double>();
-    
-    this.odometryCorrection = odometryCorrection;
 
+    this.odometryCorrection = odometryCorrection;
+    this.lightLocalizer = lightLocalizer;
   }
 
   /**
@@ -131,8 +148,10 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   public void run() {
 
     try {
-      timer = new Timer(100, new NavigationWithObstacle(leftMotor, rightMotor, track, wheelRad, LLX,
-          LLY, URX, URY, sensorMotor, lcd, TR, sampleProvider, odometryCorrection));
+      timer = new Timer(100,
+          new NavigationWithObstacle(leftMotor, rightMotor, track, wheelRad, TN_LL_X, TN_LL_Y,
+              TN_UR_X, TN_UR_Y, SZ_LL_X, SZ_LL_Y, SZ_UR_X, SZ_UR_Y, corner, sensorMotor, lcd, TR,
+              sampleProvider, odometryCorrection, lightLocalizer));
     } catch (OdometerExceptions e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -140,12 +159,11 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     timer.start();
 
     // travel to the center of the searching area
-    currentDestination[0] = (LLX + URX) /2;
-    currentDestination[1] = (LLY + URY) /2;
+    currentDestination[0] = (SZ_LL_X + SZ_UR_X) / 2;
+    currentDestination[1] = (SZ_LL_Y + SZ_UR_Y) / 2;
 
 
     state = State.INIT;
-
 
     while (true) {
 
@@ -159,38 +177,39 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
         case TRAVELLING: {
           if (usDistance < 15 && usDistance > 2) {
             state = State.AVOIDINGCAN;
-          }else if (OdometryCorrection.oneLineDetected){
-            state = State.CORRECTING;
           }
+          // else if (OdometryCorrection.oneLineDetected || OdometryCorrection.otherLineDetected){
+          // state = State.CORRECTING;
+          // System.out.println("transit to correcting");
+          // }
           else if (!checkIfDone(currentDestination[0], currentDestination[1])) {
             travelTo(currentDestination[0], currentDestination[1]);
           } else if (checkIfDone(currentDestination[0], currentDestination[1])) {
             turnTo(0);
             leftMotor.stop();
             rightMotor.stop();
-            Sound.beep();
             state = State.SCANNING;
           }
 
           break;
         }
-        case CORRECTING:{
+        case CORRECTING: {
           double theta = odo.getXYT()[2];
           double correctedHeading = 0;
-          if((theta <10 && theta >0) || (theta >350 && theta <360)) {
+          if ((theta < 10 && theta > 0) || (theta > 350 && theta < 360)) {
             correctedHeading = 0;
-          }
-          else if(theta <100 && theta > 80) {
+          } else if (theta < 100 && theta > 80) {
             correctedHeading = 90;
-          }
-          else if(theta >170 && theta < 190) {
+          } else if (theta > 170 && theta < 190) {
             correctedHeading = 180;
-          }
-          else if(theta < 280 && theta >260) {
+          } else if (theta < 280 && theta > 260) {
             correctedHeading = 270;
           }
           odometryCorrection.correct(correctedHeading);
           state = State.TRAVELLING;
+          System.out
+              .println("odo " + odo.getXYT()[0] + " " + odo.getXYT()[1] + " " + odo.getXYT()[2]);
+          System.out.println("going to travelling");
         }
         case SCANNING: {
           scan();
@@ -198,17 +217,32 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
         }
         case COLORDETECTION: {
 
+          System.out.println("color detection state");
+          System.out.println("size " + canLocation.size());
           for (Double data : canLocation) {
             turnTo(data - 3);
             sampleProvider.fetchSample(sample, 0);
             usDistance = (int) (sample[0] * 100); // convert to cm
             startColorDetection();
-            // if (isTargetCan) {
-            // state = State.GRABBINGCAN;
-            // break;
-            // }
+            if (isTargetCan) {
+              // state = State.GRABBINGCAN;
+              // TODO: for beta demo
+              Sound.beep();
+              Sound.beep();
+              Sound.beep();
+              Sound.beep();
+              Sound.beep();
+              Sound.beep();
+              Sound.beep();
+              Sound.beep();
+              Sound.beep();
+              Sound.beep();
+              break;
+            }
           }
 
+          currentDestination[0] = SZ_UR_X;
+          currentDestination[1] = SZ_UR_Y;
           state = State.LEAVING;
 
           break;
@@ -225,17 +259,21 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
         }
         case LEAVING: {
           // leave the searching area and go to the tunnel
-          currentDestination[0] = URX;
-          currentDestination[1] = URY;
-          if (usDistance < 15 && usDistance > 2) {
+
+          if (usDistance < 15 && usDistance > 0.5) {
             state = State.AVOIDINGCAN;
           } else if (!checkIfDone(currentDestination[0], currentDestination[1])) {
             travelTo(currentDestination[0], currentDestination[1]);
           } else if (checkIfDone(currentDestination[0], currentDestination[1])) {
-            turnTo(0);
-            leftMotor.stop();
-            rightMotor.stop();
-            Sound.beep();
+            // TODO: for beta demo only
+            // turnTo(0);
+            // leftMotor.stop();
+            // rightMotor.stop();
+            // Sound.beep();
+            // Sound.beep();
+            // Sound.beep();
+            // Sound.beep();
+            // Sound.beep();
           }
           break;
         }
@@ -254,6 +292,10 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     turnTo(0);
     leftMotor.stop();
     rightMotor.stop();
+    Sound.beep();
+    Sound.beep();
+    Sound.beep();
+    Sound.beep();
     Sound.beep();
     timer.stop();
   }
@@ -275,6 +317,8 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     double currentY = pos[1];
     double theta = pos[2];
 
+    leftMotor.setSpeed(FORWARD_SPEED);
+    rightMotor.setSpeed(FORWARD_SPEED);
 
     // run along the line
     double distanceX = x * TILE_SIZE - currentX;
@@ -287,15 +331,28 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
         turnTo(90);
       }
 
+      // leftMotor.forward();
+      // rightMotor.forward();
+
+      leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] {rightMotor});
+      leftMotor.startSynchronization();
       leftMotor.forward();
       rightMotor.forward();
+      leftMotor.endSynchronization();
 
     } else {
       // x is done
       if (!offsetAdded) {
         // change the 3 to distanceX?
-        leftMotor.rotate(convertDistance(wheelRad, 3), true);
-        rightMotor.rotate(convertDistance(wheelRad, 3), false);
+        // leftMotor.rotate(convertDistance(wheelRad, distanceX), true);
+        // rightMotor.rotate(convertDistance(wheelRad, distanceX), false);
+
+        leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] {rightMotor});
+        leftMotor.startSynchronization();
+        leftMotor.rotate(convertDistance(wheelRad, distanceX), true);
+        rightMotor.rotate(convertDistance(wheelRad, distanceX), false);
+        leftMotor.endSynchronization();
+
         offsetAdded = true;
       }
       if (distanceY < 0 && Math.abs(theta - 180) > thetaAccuracy) {
@@ -430,9 +487,9 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
       e.printStackTrace();
     }
 
-    if (isTargetCan) {
-      return;
-    }
+    // if (isTargetCan) {
+    // return;
+    // }
 
     // go back to the center
     leftMotor.rotate(-convertDistance(wheelRad, distance), true);
@@ -466,19 +523,19 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     leftMotor.rotate(convertDistance(wheelRad, TILE_SIZE * 0.7), true);
     rightMotor.rotate(convertDistance(wheelRad, TILE_SIZE * 0.7), false);
 
-    // leftMotor.setSpeed(TURNING_SPEED);
-    // rightMotor.setSpeed(TURNING_SPEED);
-    //
-    // // turn left 90 degree
-    // leftMotor.rotate(-convertAngle(wheelRad, track, 90), true);
-    // rightMotor.rotate(convertAngle(wheelRad, track, 90), false);
-    //
-    // leftMotor.setSpeed(FORWARD_SPEED);
-    // rightMotor.setSpeed(FORWARD_SPEED + 2);
-    //
-    // leftMotor.rotate(convertDistance(wheelRad, TILE_SIZE * 1.5), true);
-    // rightMotor.rotate(convertDistance(wheelRad, TILE_SIZE * 1.5), false);
-    //
+    leftMotor.setSpeed(TURNING_SPEED);
+    rightMotor.setSpeed(TURNING_SPEED);
+
+    // turn left 90 degree
+    leftMotor.rotate(-convertAngle(wheelRad, track, 90), true);
+    rightMotor.rotate(convertAngle(wheelRad, track, 90), false);
+
+    leftMotor.setSpeed(FORWARD_SPEED);
+    rightMotor.setSpeed(FORWARD_SPEED + 2);
+
+    leftMotor.rotate(convertDistance(wheelRad, TILE_SIZE * 1.2), true);
+    rightMotor.rotate(convertDistance(wheelRad, TILE_SIZE * 1.2), false);
+
     // leftMotor.setSpeed(TURNING_SPEED);
     // rightMotor.setSpeed(TURNING_SPEED);
     //
@@ -522,8 +579,15 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     if (Math.abs(destinationX * TILE_SIZE - pos[0]) < navigationAccuracy
         && Math.abs(destinationY * TILE_SIZE - pos[1]) < navigationAccuracy) {
       // y offset
-      // leftMotor.rotate(convertDistance(wheelRad, 1.5),true);
-      // rightMotor.rotate(convertDistance(wheelRad,1.5), false);
+//      leftMotor.rotate(convertDistance(wheelRad, 1.5), true);
+//      rightMotor.rotate(convertDistance(wheelRad, 1.5), false);
+      
+//      leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] {rightMotor});
+//      leftMotor.startSynchronization();
+//      leftMotor.rotate(convertDistance(wheelRad, 1.5), true);
+//      rightMotor.rotate(convertDistance(wheelRad, 1.5), false);
+//      leftMotor.endSynchronization();
+      
       return true;
     } else {
       return false;
@@ -542,7 +606,9 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
     if (state == State.SCANNING) {
       int filter_control = 15;
-      int boundary = 32 * 2;
+      // TODO: what if it is not a square?
+      int boundary =
+          Math.max(Math.round((SZ_LL_X + SZ_UR_X) / 2), Math.round((SZ_LL_Y + SZ_UR_Y) / 2));
       if (usDistance < boundary) {
 
         if (filter_count == 0) {
@@ -594,13 +660,13 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     leftMotor.rotate(convertAngle(wheelRad, track, 360), true);
     rightMotor.rotate(-convertAngle(wheelRad, track, 360), false);
 
-    timer.stop();
 
-    try {
-      Thread.sleep(2000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+
+    // try {
+    // Thread.sleep(2000);
+    // } catch (InterruptedException e) {
+    // e.printStackTrace();
+    // }
 
     // for (Double data : canLocation) {
     // lcd.drawString(Double.toString(data), 0, 0);
@@ -629,40 +695,65 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
    * @param SZ_X: x coordinate of the lower left corner of the searching area
    * @param SZ_Y: y coordinate of the lower left corner of the searching area
    */
-  public void navigateToSearchingArea(int LL_X, int LL_Y, int UR_X, int UR_Y, int corner, int SZ_X,
-      int SZ_Y) {
-    double[][] destinations = {{0, 0}, {0, 0}, {0, 0}};
-    if (LL_Y + 2 == UR_Y && LL_X + 1 == UR_X) {
+  public void navigateToSearchingArea() {
+
+    double[][] destinations = {{0, 0}, {0, 0}, {0, 0}, {0,0}};
+    int localizeTheta = 0;
+    if (TN_LL_Y + 2 == TN_UR_Y && TN_LL_X + 1 == TN_UR_X) {
       if (corner == 2 || corner == 3) {
-        destinations[0][0] = LL_X + 0.45;
-        destinations[0][1] = UR_Y + 0.5;
-        destinations[1][0] = LL_X + 0.45;
-        destinations[1][1] = LL_Y - 0.5;
+        //case 1
+        destinations[0][0] = TN_LL_X;
+        destinations[0][1] = TN_UR_Y + 1;
+        destinations[1][0] = TN_LL_X + 0.5; //0.45
+        destinations[1][1] = TN_UR_Y + 1;
+        destinations[2][0] = TN_LL_X + 0.5;
+        destinations[2][1] = TN_LL_Y - 1;
       } else if (corner == 1 || corner == 0) {
-        destinations[0][0] = LL_X + 0.55;
-        destinations[0][1] = LL_Y - 0.5;
-        destinations[1][0] = LL_X + 0.55;
-        destinations[1][1] = UR_Y + 0.5;
+        //case 4
+        destinations[0][0] = TN_LL_X + 1;
+        destinations[0][1] = TN_LL_Y -1;
+        destinations[1][0] = TN_LL_X + 0.5; //0.55
+        destinations[1][1] = TN_LL_Y - 1;
+        destinations[2][0] = TN_LL_X + 0.5;
+        destinations[2][1] = TN_UR_Y + 1;
       }
-    } else if (LL_Y + 1 == UR_Y && LL_X + 2 == UR_X) {
+    } else if (TN_LL_Y + 1 == TN_UR_Y && TN_LL_X + 2 == TN_UR_X) {
+      
       if (corner == 1 || corner == 2) {
-        destinations[0][0] = UR_X + 0.5;
-        destinations[0][1] = UR_Y - 0.45;
-        destinations[1][0] = LL_X - 0.5;
-        destinations[1][1] = UR_Y - 0.45;
+      //case 2
+        destinations[0][0] = TN_UR_X + 1;
+        destinations[0][1] = TN_UR_Y;
+        destinations[1][0] = TN_UR_X + 1;
+        destinations[1][1] = TN_UR_Y - 0.5; //0.45
+        destinations[2][0] = TN_LL_X - 1;
+        destinations[2][1] = TN_UR_Y - 0.5;
       } else if (corner == 0 || corner == 3) {
-        destinations[0][0] = LL_X - 0.5;
-        destinations[0][1] = LL_Y + 0.45;
-        destinations[1][0] = UR_X + 0.5;
-        destinations[1][1] = LL_Y + 0.45;
+        //case 3
+        destinations[0][0] = TN_LL_X - 1;
+        destinations[0][1] = TN_LL_Y;
+        destinations[1][0] = TN_LL_X - 1;
+        destinations[1][1] = TN_LL_Y + 0.5;    //0.45
+        destinations[2][0] = TN_UR_X + 1;
+        destinations[2][1] = TN_LL_Y + 0.5;
       }
     }
 
-    destinations[2][0] = SZ_X;
-    destinations[2][1] = SZ_Y;
+    destinations[3][0] = SZ_LL_X;
+    destinations[3][1] = SZ_LL_Y;
 
-    for (int i = 0; i < 3; i++) {
+
+//    while (!checkIfDone(destinations[0][0], destinations[0][1])) {
+//      travelTo(destinations[0][0], destinations[0][1]);
+//    }
+//    turnTo(0);
+//    lightLocalizer.startLocalize((int)destinations[0][0]*TILE_SIZE, (int)destinations[0][1]*TILE_SIZE, 0);
+//    System.out.println(odo.getXYT()[0]+" "+ odo.getXYT()[1]+" "+odo.getXYT()[2]);
+    
+    for (int i = 1; i < 4; i++) {
+      System.out.println("navigating to the tunnel");
+      System.out.println("destinaiton " + destinations[i][0] + " " + destinations[i][1]);;
       while (!checkIfDone(destinations[i][0], destinations[i][1])) {
+//        System.out.println(odo.getXYT()[0]+" "+ odo.getXYT()[1]+" "+odo.getXYT()[2]);
         travelTo(destinations[i][0], destinations[i][1]);
       }
       leftMotor.rotate(convertDistance(wheelRad, 2), true);
@@ -671,6 +762,11 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     turnTo(0);
     leftMotor.stop(true);
     rightMotor.stop(false);
+    Sound.beep();
+    Sound.beep();
+    Sound.beep();
+    Sound.beep();
+    Sound.beep();
   }
 
 }

@@ -23,7 +23,8 @@ import lejos.utility.TimerListener;
 public class UltrasonicLocalizer implements TimerListener {
   private static SampleProvider usSampleProvider;
   private static float[] usSample;
-
+  private static int ultrasonicSpeed = 200;
+  
   private static Odometer odo = null;
 
   private static double angleA = -1;
@@ -61,12 +62,13 @@ public class UltrasonicLocalizer implements TimerListener {
     // turn the robot away from the wall
     // 30 is the d. Since the robot will face away the wall most of the time, d is larger than the
     // rising edge
-    awayFromWall(true, 30);
-    angleA = toWall(true, 30); // back wall
+    int d = 35;
+    awayFromWall(true, d);
+    angleA = toWall(true, d); // back wall
     Sound.beep();
 
-    awayFromWall(false, 30);
-    angleB = toWall(false, 30); // left wall
+    awayFromWall(false, d);
+    angleB = toWall(false, d); // left wall
     Sound.beep();
 
     // stop the timer, so there will be no new reading comes from the ultrasonic sensor
@@ -83,8 +85,8 @@ public class UltrasonicLocalizer implements TimerListener {
     }
 
     // turn to the actual 0
-    Lab5.leftMotor.setSpeed(Lab5.TURNING_SPEED);
-    Lab5.rightMotor.setSpeed(Lab5.TURNING_SPEED);
+    Lab5.leftMotor.setSpeed(ultrasonicSpeed);
+    Lab5.rightMotor.setSpeed(ultrasonicSpeed);
     Lab5.leftMotor.rotate(convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, deltaTheta), true);
     Lab5.rightMotor.rotate(-convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, deltaTheta), false);
 
@@ -101,8 +103,8 @@ public class UltrasonicLocalizer implements TimerListener {
    * @param d: distance from the wall
    */
   private void awayFromWall(boolean direction, int d) {
-    Lab5.leftMotor.setSpeed(Lab5.TURNING_SPEED);
-    Lab5.rightMotor.setSpeed(Lab5.TURNING_SPEED);
+    Lab5.leftMotor.setSpeed(ultrasonicSpeed);
+    Lab5.rightMotor.setSpeed(ultrasonicSpeed);
 
     while (distance < d + k) {
       if (direction) {
@@ -113,15 +115,15 @@ public class UltrasonicLocalizer implements TimerListener {
         Lab5.rightMotor.forward();
       }
     }
-    Lab5.leftMotor.stop(true);
-    Lab5.rightMotor.stop();
+//    Lab5.leftMotor.stop(true);
+//    Lab5.rightMotor.stop();
     Lab5.lcd.drawString("away", 0, 5);
   }
 
 
   private double toWall(boolean direction, int d) {
-    Lab5.leftMotor.setSpeed(Lab5.TURNING_SPEED);
-    Lab5.rightMotor.setSpeed(Lab5.TURNING_SPEED);
+    Lab5.leftMotor.setSpeed(ultrasonicSpeed);
+    Lab5.rightMotor.setSpeed(ultrasonicSpeed);
 
     while (distance > d - k) {
       if (direction) {
@@ -132,8 +134,8 @@ public class UltrasonicLocalizer implements TimerListener {
         Lab5.rightMotor.forward();
       }
     }
-    Lab5.leftMotor.stop(true);
-    Lab5.rightMotor.stop();
+//    Lab5.leftMotor.stop(true);
+//    Lab5.rightMotor.stop();
     Lab5.lcd.drawString("toward", 0, 5);
 
     return odo.getXYT()[2]; // return the angle
