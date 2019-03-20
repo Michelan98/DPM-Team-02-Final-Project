@@ -31,12 +31,15 @@ public class ColorClassification implements TimerListener {
   private static EV3LargeRegulatedMotor sensorMotor;
   private static TextLCD lcd;
 
-  // 0: red can, 1: green can, 2: yellow can, 3: blue can 4:label
+  // 4: red can, 2: green can, 3: yellow can, 1: blue can, 5:label
   private double canRGBNormalizedMeans[][] = {{0.927464231, 0.317823524, 0.130221225},
       {0.250897607, 0.943892592, 0.207426042}, {0.833111075, 0.526009994, 0.156434809},
       {0.298917037, 0.726693533, 0.612517117}, {0.711488185, 0.570923876, 0.377780294}};
+  
+  private double canRGBNormalizedMeans[][] = {{0.298917037, 0.726693533, 0.612517117},{0.250897607, 0.943892592, 0.207426042},
+      {0.833111075, 0.526009994, 0.156434809},{0.927464231, 0.317823524, 0.130221225},{0.711488185, 0.570923876, 0.377780294}};
 
-  // 0: red can, 1: green can, 2: yellow can, 3: blue can, 4:label
+  // 4: red can, 2: green can, 3: yellow can, 1: blue can, 5:label
   private static int colorCount[] = {0, 0, 0, 0, 0};
 
   // target color
@@ -83,31 +86,31 @@ public class ColorClassification implements TimerListener {
     for (int i = 0; i < 4; i++) {
       if (temp < colorCount[i]) {
         temp = colorCount[i];
-        result = i;
+        result = i+1;
       }
     }
 
     //display the result on the lcd
     switch (result) {
-      case 0:
+      case 4:
         lcd.drawString("Red", 0, 2);
         Sound.playTone(100, 500);
         Sound.playTone(100, 500);
         Sound.playTone(100, 500);
         Sound.playTone(100, 500);
         break;
-      case 1:
+      case 2:
         lcd.drawString("Green", 0, 2);
         Sound.playTone(100, 500);
         Sound.playTone(100, 500);
         break;
-      case 2:
+      case 3:
         lcd.drawString("Yellow", 0, 2);
         Sound.playTone(100, 500);
         Sound.playTone(100, 500);
         Sound.playTone(100, 500);
         break;
-      case 3:
+      case 1:
         lcd.drawString("Blue", 0, 2);
         Sound.playTone(100, 500);
         break;

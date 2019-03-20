@@ -10,7 +10,7 @@ public class LightSensorController {
 	private SensorMode idColour;
 	private float[] colorValue;
 	
-	public static final double THRESHOLD = 0.30;
+	public static final double THRESHOLD = 0.2;
 	
 	private float colorIntensity;
 	
