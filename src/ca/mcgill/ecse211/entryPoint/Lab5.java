@@ -93,16 +93,8 @@ public class Lab5 {
    */
   public static void main(String str[]) { 
     
-<<<<<<< HEAD
     WiFi.getData();
-=======
-    //get data from the wifi class
-//    WiFi.getData();
-    
-    
-    
-    //initialize and start the odometer
->>>>>>> 756eff77a70b7d5a42cd2906ec1f2f74658f0cf7
+
     Odometer odometer =null;
     try {
       odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD);
