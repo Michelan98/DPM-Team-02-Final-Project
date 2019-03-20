@@ -62,55 +62,172 @@ public class WiFi {
        * an exception letting you know.
        */
        data = conn.getData();
+       
+       // Team numbers
+       Lab5.RedTeam = ((Long) data.get("RedTeam")).intValue();
+       Lab5.GreenTeam = ((Long) data.get("GreenTeam")).intValue();
+       
+       // Corners
+       Lab5.greenCorner= ((Long) data.get("GreenCorner")).intValue();
+       
+       // Green Zone
+       Lab5.Green_UR_x= ((Long) data.get("Green_UR_x")).intValue();
+       Lab5.Green_LL_x= ((Long) data.get("Green_LL_x")).intValue();
+       Lab5.Green_UR_y = ((Long) data.get("Green_UR_y")).intValue();
+       Lab5.Green_LL_y= ((Long) data.get("Green_LL_y")).intValue();
+       
+       /*Lab5.Island_UR_x = ((Long) data.get("Island_UR_x")).intValue();
+       Lab5.Island_LL_x= ((Long) data.get("Island_LL_x")).intValue();
+       Lab5.Island_UR_y = ((Long) data.get("Island_UR_y")).intValue();
+       Lab5.Island_LL_y = ((Long) data.get("Island_LL_y")).intValue();*/
+       
+       // Green's Tunnel
+       Lab5.TNG_LL_x = ((Long) data.get("TNG_LL_x")).intValue();
+       Lab5.TNG_UR_x = ((Long) data.get("TNG_UR_x")).intValue();
+       Lab5.TNG_LL_y= ((Long) data.get("TNG_LL_y")).intValue();
+       Lab5.TNG_UR_y= ((Long) data.get("TNG_UR_y")).intValue();
+       
+       // Search Area Red Team
+       
+       // Upper-right hand corner
+       Lab5.SZR_UR_x = ((Long) data.get("SZR_UR_x")).intValue();
+       Lab5.SZR_UR_y = ((Long) data.get("SZR_UR_y")).intValue(); 
+       
+       // Lower-left hand corner
+       Lab5.SZR_LL_x = ((Long) data.get("SZR_LL_x")).intValue();
+       Lab5.SZR_LL_y = ((Long) data.get("SZR_LL_y")).intValue(); 
+       
+       // Search Area Green Team
 
-    } catch (Exception e) {
-      System.err.println("Error: " + e.getMessage());
-    }
-    
-    Lab5.RedTeam = ((Long) data.get("RedTeam")).intValue();
-    Lab5.GreenTeam = ((Long) data.get("GreenTeam")).intValue();
-    
-    Lab5.redCorner= ((Long) data.get("RedCorner")).intValue();
-    Lab5.greenCorner= ((Long) data.get("GreenCorner")).intValue();
-    
-    Lab5.Red_UR_x = ((Long) data.get("Red_UR_x")).intValue();
-    Lab5.Red_LLx = ((Long) data.get("Red_LL_x")).intValue();
-    Lab5.Red_UR_y= ((Long) data.get("Red_UR_y")).intValue();
-    Lab5.Red_LL_y= ((Long) data.get("Red_LL_y")).intValue();
-    
-    Lab5.Green_UR_x= ((Long) data.get("Green_UR_x")).intValue();
-    Lab5.Green_LL_x= ((Long) data.get("Green_LL_x")).intValue();
-    Lab5.Green_UR_y = ((Long) data.get("Green_UR_y")).intValue();
-    Lab5.Green_LL_y= ((Long) data.get("Green_LL_y")).intValue();
-    
-    Lab5.Island_UR_x = ((Long) data.get("Island_UR_x")).intValue();
-    Lab5.Island_LL_x= ((Long) data.get("Island_LL_x")).intValue();
-    Lab5.Island_UR_y = ((Long) data.get("Island_UR_y")).intValue();
-    Lab5.Island_LL_y = ((Long) data.get("Island_LL_y")).intValue();
-    
-    Lab5.TNR_LL_x = ((Long) data.get("TNR_LL_x")).intValue();
-    Lab5.TNR_UR_x = ((Long) data.get("TNR_UR_x")).intValue();
-    Lab5.TNR_LL_y = ((Long) data.get("TNR_LL_y")).intValue();
-    Lab5.TNR_UR_y = ((Long) data.get("TNR_UR_y")).intValue();
-    
-    Lab5.TNG_LL_x = ((Long) data.get("TNG_LL_x")).intValue();
-    Lab5.TNG_UR_x = ((Long) data.get("TNG_UR_x")).intValue();
-    Lab5.TNG_LL_y= ((Long) data.get("TNG_LL_y")).intValue();
-    Lab5.TNG_UR_y= ((Long) data.get("TNG_UR_y")).intValue();
-    
-    Lab5.SZR_UR_x = ((Long) data.get("SZR_UR_x")).intValue();
-    Lab5.SZR_UR_y = ((Long) data.get("SZR_UR_y")).intValue(); 
-    
-    Lab5.SZG_UR_x = ((Long) data.get("SZG_UR_x")).intValue();
-    Lab5.SZG_UR_y = ((Long) data.get("SZG_UR_y")).intValue();
-    
-    Lab5.SZR_LL_x = ((Long) data.get("SZR_LL_x")).intValue();
-    Lab5.SZR_LL_y = ((Long) data.get("SZR_LL_y")).intValue(); 
-    
-    Lab5.SZG_LL_x = ((Long) data.get("SZG_LL_x")).intValue();
-    Lab5.SZG_LL_y = ((Long) data.get("SZG_LL_y")).intValue();
+       // Upper-right hand corner
+       Lab5.SZG_UR_x = ((Long) data.get("SZG_UR_x")).intValue();
+       Lab5.SZG_UR_y = ((Long) data.get("SZG_UR_y")).intValue();
+       
+       // Lower-left hand corner
+       Lab5.SZG_LL_x = ((Long) data.get("SZG_LL_x")).intValue();
+       Lab5.SZG_LL_y = ((Long) data.get("SZG_LL_y")).intValue();
+       
+		if(Lab5.RedTeam == TEAM_NUMBER)
+		{
+			assignTeamColor(0);
+		}
+		else if(Lab5.GreenTeam == TEAM_NUMBER)
+		{
+			assignTeamColor(1);
+		}
+		else
+		{
+			System.out.println("Team number error");
+		}
 
+	} catch (Exception e) {
+		System.err.println("Error: " + e.getMessage());
+	}
+	System.out.println("Complete!");   
+  }
+	
+	/**
+	 * sets the parameters to the correct values depending on team color
+	 * 
+	 * @param color 0 if red team, 1 if green team
+	 */
+	private static void assignTeamColor(int color) {
+		if(color == 0) {  // RED		
+			
+			setStartingCoordinates(Lab5.RedTeam);
+			
+		    Lab5.redCorner= ((Long) data.get("RedCorner")).intValue();
+		    // Search area
+	       Lab5.Red_UR_x = ((Long) data.get("Red_UR_x")).intValue();
+	       Lab5.Red_LLx = ((Long) data.get("Red_LL_x")).intValue();
+	       Lab5.Red_UR_y= ((Long) data.get("Red_UR_y")).intValue();
+	       Lab5.Red_LL_y= ((Long) data.get("Red_LL_y")).intValue();
+	       
+	       // Tunnel
+	       Lab5.TNR_LL_x = ((Long) data.get("TNR_LL_x")).intValue();
+	       Lab5.TNR_UR_x = ((Long) data.get("TNR_UR_x")).intValue();
+	       Lab5.TNR_LL_y = ((Long) data.get("TNR_LL_y")).intValue();
+	       Lab5.TNR_UR_y = ((Long) data.get("TNR_UR_y")).intValue();
+	       
+	       // Search Area
+	       
+	       // Upper-right hand corner
+	       Lab5.SZR_UR_x = ((Long) data.get("SZR_UR_x")).intValue();
+	       Lab5.SZR_UR_y = ((Long) data.get("SZR_UR_y")).intValue(); 
+	       
+	       // Lower-left hand corner
+	       Lab5.SZR_LL_x = ((Long) data.get("SZR_LL_x")).intValue();
+	       Lab5.SZR_LL_y = ((Long) data.get("SZR_LL_y")).intValue(); 
+	       
+		}
+		else if(color == 1) //green
+		{
+			corner = G;
+			LL_x = Green_LL_x;
+			LL_y = Green_LL_y;
+			UR_x = Green_UR_x;
+			UR_y = Green_UR_y;
+			TunLL_x = BRG_LL_x;
+			TunLL_y = BRG_LL_y;
+			TunUR_x = BRG_UR_x;
+			TunUR_y = BRG_UR_y;
+			Tr_x = TG_x;
+			Tr_y = TG_y;
+			setStartingCoordinates(G);
+			
+			opp_corner = R;
+			opp_LL_x = Red_LL_x;
+			opp_LL_y = Red_LL_y;
+			opp_UR_x = Red_UR_x;
+			opp_UR_y = Red_UR_y;
+			opp_TunLL_x = BRR_LL_x;
+			opp_TunLL_y = BRR_LL_y;
+			opp_TunUR_x = BRR_UR_x;
+			opp_TunUR_y = BRR_UR_y;
+			opp_Tr_x = TR_x;
+			opp_Tr_y = TR_y;
+		}
+		else
+		{
+			System.out.println("Wrong color input for parameter assignment");
+		}
+	}
+
+	/**
+	 * finds the first set of coordinates that the robot will localize to depending on the starting zone and 
+	 * the size of the game grid
+	 * 
+	 * @param zone 0, 1, 2, or 3
+	 */
+	private static void setStartingCoordinates(int zone)
+	{
+		if(zone == 0)
+		{
+			localizeX = 1;
+			localizeY = 1;
+		}
+		else if(zone == 1)
+		{
+			localizeX = RingChallenge.GAME_GRID_X - 1;
+			localizeY = 1;	
+		}
+		else if(zone == 2)
+		{
+			localizeX = RingChallenge.GAME_GRID_X - 1;
+			localizeY = RingChallenge.GAME_GRID_Y - 1;	
+		}
+		else if(zone == 3)
+		{
+			localizeX = 1;
+			localizeY = RingChallenge.GAME_GRID_Y - 1;	
+		}
+		else
+		{
+			System.out.println("Zone number error");
+		}
+	}
+	
     // Wait until user decides to end program
     Button.waitForAnyPress();
   }
-}
+
