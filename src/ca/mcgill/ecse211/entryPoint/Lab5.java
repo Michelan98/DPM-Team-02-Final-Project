@@ -72,11 +72,15 @@ public class Lab5 {
   public static final int  FORWARD_SPEED = 200;
   public static final double TILE_SIZE = 30.48;
   
-//declaring all variables for Wifi connection 
-  public static int RedTeam, GreenTeam, redCorner, greenCorner, Red_UR_x, Red_LLx, Red_UR_y,
-  Red_LL_y, Green_UR_x, Green_LL_x, Green_UR_y, Green_LL_y, Island_UR_x, Island_LL_x, Island_UR_y,
-  Island_LL_y, TNR_LL_x, TNR_UR_x, TNR_LL_y, TNR_UR_y, TNG_LL_x, TNG_UR_x, TNG_LL_y, TNG_UR_y, 
-  SZR_UR_x, SZR_UR_y, SZG_UR_x, SZG_UR_y, SZR_LL_y, SZR_LL_x, SZG_LL_x, SZG_LL_y;
+  /*
+   * Serves as Visual aid for now for calling Variable names
+   * 
+   *redTeam, greenTeam, redCorner, greenCorner, Red_LL_x, Red_LL_y, Red_UR_x, Red_UR_y, 
+   *Green_LL_x, Green_LL_y, Green_UR_x, Green_UR_y, Island_LL_x, Island_LL_y, Island_UR_x, Island_UR_y, 
+   *TNR_LL_x, TNR_LL_y, TNR_UR_x, TNR_UR_y, TNG_LL_x, TNG_LL_y, TNG_UR_x, TNG_UR_y
+   *
+   */
+ 
   
   private static LightSensorController leftLightSensor;
   private static LightSensorController rightLightSensor;

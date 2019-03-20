@@ -4,23 +4,26 @@ import java.util.Map;
 import ca.mcgill.ecse211.WiFiClient.WifiConnection;
 
 /**
- * This class contains the data that will be fetched from the server before
- * the start of the game. It uses the Wifi connection class to fetch data 
- * from the server 
+ * This class allows to get the WiFi data from the Server.
  * 
- * Based off example written by Michael Smith and Tharsan Ponnampalam
- * @author Lara Kollokian
+ * @author michelabdelnour
  *
  */
 public class WiFi {
 
 	//set at the beginning
-	private static final String SERVER_IP = "192.168.2.2";
-	private static final int TEAM_NUMBER = 8;
+
+	private static final String SERVER_IP = "192.168.2.11";
+	private static final int TEAM_NUMBER = 2;
 
 	// Enable/disable printing of debug info from the WiFi class
-	private static final boolean ENABLE_DEBUG_WIFI_PRINT = true;
+	private static final boolean ENABLE_DEBUG_WIFI_PRINT = false;
 	
+	// declaring constants for platform Cartesian dimensions
+	
+	public static final int GRID_X = 9;
+	public static final int GRID_Y = 9;
+
 	//Team numbers
 	private static int redTeam = 0, greenTeam = 0;
 	
@@ -41,17 +44,16 @@ public class WiFi {
 
 	// Green Tunnel
 	private static int TNG_LL_x = 0, TNG_LL_y = 0, TNG_UR_x = 0, TNG_UR_y = 0;
-
 	
-	//OUR COORDS
+	// Coordinate variables
 	public static int corner, localizeX, localizeY, LL_x, LL_y, UR_x, UR_y, TunLL_x, TunLL_y, TunUR_x, TunUR_y;
-	
-	public static int opp_corner, opp_localizeX, opp_localizeY, opp_LL_x, opp_LL_y, opp_UR_x, opp_UR_y, opp_TunLL_x, opp_TunLL_y, opp_TunUR_x, opp_TunUR_y, opp_Tr_x, opp_Tr_y;
+	public static int opp_corner, opp_localizeX, opp_localizeY, opp_LL_x, opp_LL_y, opp_UR_x, opp_UR_y, opp_TunLL_x, opp_TunLL_y, opp_TunUR_x, opp_TunUR_y;
 	
 	@SuppressWarnings("rawtypes")
 	public static void wifi()
 	{
 		System.out.println("Running..");
+
 
 		// Initialize WifiConnection class
 		WifiConnection conn = new WifiConnection(SERVER_IP, TEAM_NUMBER, ENABLE_DEBUG_WIFI_PRINT);
@@ -70,7 +72,6 @@ public class WiFi {
 			 * an exception letting you know.
 			 */
 			Map data = conn.getData();
-//			System.out.println("Map:\n" + data);
 			
 			//team numbers
 			redTeam = ((Long) data.get("RedTeam")).intValue();
@@ -128,69 +129,73 @@ public class WiFi {
 			System.err.println("Error: " + e.getMessage());
 		}
 		
-		System.out.println("Complete!");
+		System.out.println("Upload Completed!");
 	}
 	
 	/**
 	 * sets the parameters to the correct values depending on team color
 	 * 
-	 * @param color 0 if red team, 1 if green team
+	 * @param color = 0 if red team, color = 1 if green team
 	 */
 	private static void assignTeamColor(int color)
 	{
-		if(color == 0) //red
+
+		if(color == 0) // RED
 		{
-			corner = R;
+			corner = redCorner;   
 			LL_x = Red_LL_x;
 			LL_y = Red_LL_y;
 			UR_x = Red_UR_x;
 			UR_y = Red_UR_y;
+			TunLL_x = TNR_LL_x;
+			TunLL_y = TNR_LL_y;
+			TunUR_x = TNR_UR_x;
+			TunUR_y = TNR_UR_y;
+
+			setStartingCoordinates(redTeam);
+			
+			opp_corner = greenCorner;
 			TunLL_x = BRR_LL_x;
 			TunLL_y = BRR_LL_y;
 			TunUR_x = BRR_UR_x;
 			TunUR_y = BRR_UR_y;
-			Tr_x = TR_x;
-			Tr_y = TR_y;
-			setStartingCoordinates(R);
+
+			setStartingCoordinates(redCorner);
 			
-			opp_corner = G;
+			opp_corner = greenCorner;
 			opp_LL_x = Green_LL_x;
 			opp_LL_y = Green_LL_y;
 			opp_UR_x = Green_UR_x;
 			opp_UR_y = Green_UR_y;
-			opp_TunLL_x = BRG_LL_x;
-			opp_TunLL_y = BRG_LL_y;
-			opp_TunUR_x = BRG_UR_x;
-			opp_TunUR_y = BRG_UR_y;
-			opp_Tr_x = TG_x;
-			opp_Tr_y = TG_y;
+			opp_TunLL_x = TNG_LL_x;
+			opp_TunLL_y = TNG_LL_y;
+			opp_TunUR_x = TNG_UR_x;
+			opp_TunUR_y = TNG_UR_y;
+
 		}
-		else if(color == 1) //green
+		else if(color == 1) // GREEN
 		{
-			corner = G;
+			corner = greenCorner;
 			LL_x = Green_LL_x;
 			LL_y = Green_LL_y;
 			UR_x = Green_UR_x;
 			UR_y = Green_UR_y;
-			TunLL_x = BRG_LL_x;
-			TunLL_y = BRG_LL_y;
-			TunUR_x = BRG_UR_x;
-			TunUR_y = BRG_UR_y;
-			Tr_x = TG_x;
-			Tr_y = TG_y;
-			setStartingCoordinates(G);
+			TunLL_x = TNG_LL_x;
+			TunLL_y = TNG_LL_y;
+			TunUR_x = TNG_UR_x;
+			TunUR_y = TNG_UR_y;
+
+			setStartingCoordinates(greenCorner);
 			
-			opp_corner = R;
+			opp_corner = redCorner;
 			opp_LL_x = Red_LL_x;
 			opp_LL_y = Red_LL_y;
 			opp_UR_x = Red_UR_x;
 			opp_UR_y = Red_UR_y;
-			opp_TunLL_x = BRR_LL_x;
-			opp_TunLL_y = BRR_LL_y;
-			opp_TunUR_x = BRR_UR_x;
-			opp_TunUR_y = BRR_UR_y;
-			opp_Tr_x = TR_x;
-			opp_Tr_y = TR_y;
+			opp_TunLL_x = TNR_LL_x;
+			opp_TunLL_y = TNR_LL_y;
+			opp_TunUR_x = TNR_UR_x;
+			opp_TunUR_y = TNR_UR_y;
 		}
 		else
 		{
@@ -199,48 +204,38 @@ public class WiFi {
 	}
 	
 	/**
-	 * finds the first set of coordinates that the robot will localize to depending on the starting zone and 
-	 * the size of the game grid
+	 * finds the first set of coordinates that the robot will localize to depending on the starting area and 
+	 * the size of the platform
 	 * 
-	 * @param zone 0, 1, 2, or 3
+	 * @param area 0, 1, 2, or 3
 	 */
-	private static void setStartingCoordinates(int zone)
+	private static void setStartingCoordinates(int area)
 	{
-		if(zone == 0)
+		if(area == 0)
 		{
 			localizeX = 1;
 			localizeY = 1;
 		}
-		else if(zone == 1)
+		else if(area == 1)
 		{
-			localizeX = RingChallenge.GAME_GRID_X - 1;
+			localizeX = GRID_X - 1;
 			localizeY = 1;	
 		}
-		else if(zone == 2)
+		else if(area == 2)
 		{
-			localizeX = RingChallenge.GAME_GRID_X - 1;
-			localizeY = RingChallenge.GAME_GRID_Y - 1;	
+			localizeX = GRID_X - 1;
+			localizeY = GRID_Y - 1;	
 		}
-		else if(zone == 3)
+		else if(area == 3)
 		{
 			localizeX = 1;
-			localizeY = RingChallenge.GAME_GRID_Y - 1;	
+			localizeY = GRID_Y - 1;	
 		}
 		else
 		{
-			System.out.println("Zone number error");
+			System.out.println("Error in specifying area");
 		}
 	}
 }
-© 2019 GitHub, Inc.
-Terms
-Privacy
-Security
-Status
-Help
-Contact GitHub
-Pricing
-API
-Training
-Blog
-About
+
+
