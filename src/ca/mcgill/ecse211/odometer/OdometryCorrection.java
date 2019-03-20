@@ -1,10 +1,10 @@
 package ca.mcgill.ecse211.odometer;
 
 
-import ca.mcgill.ecse211.controller.LightSensorController;
 import lejos.hardware.Sound;
 import lejos.hardware.lcd.LCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import ca.mcgill.ecse211.controller.LightSensorController;
 import ca.mcgill.ecse211.entryPoint.*;
 
 /**
