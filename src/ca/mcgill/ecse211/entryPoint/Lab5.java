@@ -100,6 +100,7 @@ public class Lab5 {
   public static void main(String str[]) {
 
     WiFi.getData();
+    System.out.println(""+WiFi.corner+"llx"+WiFi.LL_x+" lly"+ WiFi.LL_y+" localizeX"+WiFi.localizeX+" localizeY"+WiFi.localizeY+ " localizetheta"+ WiFi.localizeTheta+ " tnllx"+WiFi.TunLL_x+" tnlly"+WiFi.TunLL_y+ " tnurx"+WiFi.TunUR_x+ " tnury"+WiFi.TunUR_y+ " szllx"+WiFi.SZ_LL_x+ " szlly"+WiFi.SZ_LL_y+ " szurx"+WiFi.SZ_UR_x+" szury"+ WiFi.SZ_UR_y);
 
 
 
@@ -168,12 +169,11 @@ public class Lab5 {
 
 
     // beta demo with wifi
-    lightLocalizer.startLocalize(WiFi.localizeX * TILE_SIZE, WiFi.localizeY * TILE_SIZE,
-        WiFi.localizeTheta);
+    lightLocalizer.startLocalize(WiFi.localizeX, WiFi.localizeY,WiFi.localizeTheta);
     try {
       NavigationWithObstacle navigation =
           new NavigationWithObstacle(leftMotor, rightMotor, TRACK, WHEEL_RAD, WiFi.TunLL_x,
-              WiFi.TunLL_y, WiFi.TunUR_x, WiFi.TunUR_y, WiFi.LL_x, WiFi.LL_y, WiFi.UR_x, WiFi.UR_y,
+              WiFi.TunLL_y, WiFi.TunUR_x, WiFi.TunUR_y, WiFi.SZ_LL_x, WiFi.SZ_LL_y, WiFi.SZ_UR_x, WiFi.SZ_UR_y,
               WiFi.corner, sensorMotor, lcd, 1, sampleProvider, odometryCorrection);
 //      Sound.beep();
 

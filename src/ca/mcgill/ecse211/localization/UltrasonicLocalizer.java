@@ -21,10 +21,9 @@ import lejos.utility.TimerListener;
  *
  */
 public class UltrasonicLocalizer implements TimerListener {
-	  private static Port usPort = LocalEV3.get().getPort("S1");
-	  private static SensorModes us = new EV3UltrasonicSensor(usPort);
-	  private static SampleProvider usSampleProvider = us.getMode("Distance");
-	  private static float[] usSample = new float[usSampleProvider.sampleSize()];
+
+	  private static float[] usSample;
+	  private static SampleProvider usSampleProvider;
 
 	  private static Odometer odo = null;
 
@@ -43,9 +42,11 @@ public class UltrasonicLocalizer implements TimerListener {
 	  
 	  private int ultrasonicSpeed = 220;
 
-	  public UltrasonicLocalizer() throws OdometerExceptions {
+	  public UltrasonicLocalizer(SampleProvider usSampleProvider) throws OdometerExceptions {
 
 	    odo = Odometer.getOdometer();
+	    this.usSampleProvider = usSampleProvider;
+	    usSample = new float[usSampleProvider.sampleSize()];
 
 	    Lab5.leftMotor.setAcceleration(Lab5.ACCELERATION);
 	    Lab5.rightMotor.setAcceleration(Lab5.ACCELERATION);
@@ -61,7 +62,7 @@ public class UltrasonicLocalizer implements TimerListener {
 	   * @throws OdometerExceptions
 	   */
 	  public void fallingEdge() throws OdometerExceptions {
-	    Timer timer = new Timer(30, new UltrasonicLocalizer());
+	    Timer timer = new Timer(30, new UltrasonicLocalizer(usSampleProvider));
 	    timer.start();
 
 	    // turn the robot away from the wall
@@ -107,7 +108,7 @@ public class UltrasonicLocalizer implements TimerListener {
 	   * @throws OdometerExceptions
 	   */
 	  public void risingEdge() throws OdometerExceptions {
-	    Timer timer = new Timer(30, new UltrasonicLocalizer());
+	    Timer timer = new Timer(30, new UltrasonicLocalizer(usSampleProvider));
 	    timer.start();
 
 	    int d = 17;
