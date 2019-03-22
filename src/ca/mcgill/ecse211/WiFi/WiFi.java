@@ -14,7 +14,7 @@ import ca.mcgill.ecse211.WiFiClient.WifiConnection;
 public class WiFi {
 
 	//set at the beginning
-	private static final String SERVER_IP = "192.168.2.11";
+	private static final String SERVER_IP = "192.168.2.3";
 	private static final int TEAM_NUMBER = 2;
 
 	// Enable/disable printing of debug info from the WiFi class
@@ -215,15 +215,15 @@ public class WiFi {
 	{
 		if(area == 0)
 		{
-			localizeX = 1;
-			localizeY = 1;
+			localizeX = 0;
+			localizeY = 0;
 			localizeTheta = 0;
 			
 		}
 		else if(area == 1)
 		{
 			localizeX = GRID_X - 1;
-			localizeY = 1;	
+			localizeY = 0;	
 			localizeTheta = 0;
 		}
 		else if(area == 2)
@@ -234,7 +234,7 @@ public class WiFi {
 		}
 		else if(area == 3)
 		{
-			localizeX = 1;
+			localizeX = 0;
 			localizeY = GRID_Y - 1;	
 			localizeTheta = 180;
 		}

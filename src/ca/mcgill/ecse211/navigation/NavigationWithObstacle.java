@@ -85,18 +85,18 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   private static ArrayList<Double> dataset;
 
   private OdometryCorrection odometryCorrection;
-  private LightLocalizer lightLocalizer;
+  // private LightLocalizer lightLocalizer;
 
   public NavigationWithObstacle(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,
       double track, double wheelRad, int TN_LL_X, int TN_LL_Y, int TN_UR_X, int TN_UR_Y, int LLX,
       int LLY, int URX, int URY, int cornerNum, EV3LargeRegulatedMotor sensorMotor, TextLCD lcd,
-      int TR, SampleProvider sampleProvider, OdometryCorrection odometryCorrection, LightLocalizer lightLocalizer)
+      int TR, SampleProvider sampleProvider, OdometryCorrection odometryCorrection)
       throws OdometerExceptions {
 
     odo = Odometer.getOdometer();
     this.leftMotor = leftMotor;
     this.rightMotor = rightMotor;
-    
+
     this.leftMotor.setAcceleration(500);
     this.rightMotor.setAcceleration(520);
 
@@ -138,7 +138,9 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     dataset = new ArrayList<Double>();
 
     this.odometryCorrection = odometryCorrection;
-    this.lightLocalizer = lightLocalizer;
+
+    // TODO: light localization before passing the tunnel
+    // this.lightLocalizer = lightLocalizer;
   }
 
   /**
@@ -151,7 +153,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
       timer = new Timer(100,
           new NavigationWithObstacle(leftMotor, rightMotor, track, wheelRad, TN_LL_X, TN_LL_Y,
               TN_UR_X, TN_UR_Y, SZ_LL_X, SZ_LL_Y, SZ_UR_X, SZ_UR_Y, corner, sensorMotor, lcd, TR,
-              sampleProvider, odometryCorrection, lightLocalizer));
+              sampleProvider, odometryCorrection));
     } catch (OdometerExceptions e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -579,15 +581,15 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     if (Math.abs(destinationX * TILE_SIZE - pos[0]) < navigationAccuracy
         && Math.abs(destinationY * TILE_SIZE - pos[1]) < navigationAccuracy) {
       // y offset
-//      leftMotor.rotate(convertDistance(wheelRad, 1.5), true);
-//      rightMotor.rotate(convertDistance(wheelRad, 1.5), false);
-      
-//      leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] {rightMotor});
-//      leftMotor.startSynchronization();
-//      leftMotor.rotate(convertDistance(wheelRad, 1.5), true);
-//      rightMotor.rotate(convertDistance(wheelRad, 1.5), false);
-//      leftMotor.endSynchronization();
-      
+      // leftMotor.rotate(convertDistance(wheelRad, 1.5), true);
+      // rightMotor.rotate(convertDistance(wheelRad, 1.5), false);
+
+      // leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] {rightMotor});
+      // leftMotor.startSynchronization();
+      // leftMotor.rotate(convertDistance(wheelRad, 1.5), true);
+      // rightMotor.rotate(convertDistance(wheelRad, 1.5), false);
+      // leftMotor.endSynchronization();
+
       return true;
     } else {
       return false;
@@ -697,42 +699,42 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
    */
   public void navigateToSearchingArea() {
 
-    double[][] destinations = {{0, 0}, {0, 0}, {0, 0}, {0,0}};
+    double[][] destinations = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
     int localizeTheta = 0;
     if (TN_LL_Y + 2 == TN_UR_Y && TN_LL_X + 1 == TN_UR_X) {
       if (corner == 2 || corner == 3) {
-        //case 1
+        // case 1
         destinations[0][0] = TN_LL_X;
         destinations[0][1] = TN_UR_Y + 1;
-        destinations[1][0] = TN_LL_X + 0.5; //0.45
+        destinations[1][0] = TN_LL_X + 0.5; // 0.45
         destinations[1][1] = TN_UR_Y + 1;
         destinations[2][0] = TN_LL_X + 0.5;
         destinations[2][1] = TN_LL_Y - 1;
       } else if (corner == 1 || corner == 0) {
-        //case 4
+        // case 4
         destinations[0][0] = TN_LL_X + 1;
-        destinations[0][1] = TN_LL_Y -1;
-        destinations[1][0] = TN_LL_X + 0.5; //0.55
+        destinations[0][1] = TN_LL_Y - 1;
+        destinations[1][0] = TN_LL_X + 0.5; // 0.55
         destinations[1][1] = TN_LL_Y - 1;
         destinations[2][0] = TN_LL_X + 0.5;
         destinations[2][1] = TN_UR_Y + 1;
       }
     } else if (TN_LL_Y + 1 == TN_UR_Y && TN_LL_X + 2 == TN_UR_X) {
-      
+
       if (corner == 1 || corner == 2) {
-      //case 2
+        // case 2
         destinations[0][0] = TN_UR_X + 1;
         destinations[0][1] = TN_UR_Y;
         destinations[1][0] = TN_UR_X + 1;
-        destinations[1][1] = TN_UR_Y - 0.5; //0.45
+        destinations[1][1] = TN_UR_Y - 0.5; // 0.45
         destinations[2][0] = TN_LL_X - 1;
         destinations[2][1] = TN_UR_Y - 0.5;
       } else if (corner == 0 || corner == 3) {
-        //case 3
+        // case 3
         destinations[0][0] = TN_LL_X - 1;
         destinations[0][1] = TN_LL_Y;
         destinations[1][0] = TN_LL_X - 1;
-        destinations[1][1] = TN_LL_Y + 0.5;    //0.45
+        destinations[1][1] = TN_LL_Y + 0.5; // 0.45
         destinations[2][0] = TN_UR_X + 1;
         destinations[2][1] = TN_LL_Y + 0.5;
       }
@@ -741,19 +743,19 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     destinations[3][0] = SZ_LL_X;
     destinations[3][1] = SZ_LL_Y;
 
+    //TODO: localize before passing the tunnel
+    // while (!checkIfDone(destinations[0][0], destinations[0][1])) {
+    // travelTo(destinations[0][0], destinations[0][1]);
+    // }
+    // turnTo(0);
+    // lightLocalizer.startLocalize((int)destinations[0][0]*TILE_SIZE,
+    // (int)destinations[0][1]*TILE_SIZE, 0);
+    // System.out.println(odo.getXYT()[0]+" "+ odo.getXYT()[1]+" "+odo.getXYT()[2]);
 
-//    while (!checkIfDone(destinations[0][0], destinations[0][1])) {
-//      travelTo(destinations[0][0], destinations[0][1]);
-//    }
-//    turnTo(0);
-//    lightLocalizer.startLocalize((int)destinations[0][0]*TILE_SIZE, (int)destinations[0][1]*TILE_SIZE, 0);
-//    System.out.println(odo.getXYT()[0]+" "+ odo.getXYT()[1]+" "+odo.getXYT()[2]);
-    
     for (int i = 1; i < 4; i++) {
       System.out.println("navigating to the tunnel");
       System.out.println("destinaiton " + destinations[i][0] + " " + destinations[i][1]);;
       while (!checkIfDone(destinations[i][0], destinations[i][1])) {
-//        System.out.println(odo.getXYT()[0]+" "+ odo.getXYT()[1]+" "+odo.getXYT()[2]);
         travelTo(destinations[i][0], destinations[i][1]);
       }
       leftMotor.rotate(convertDistance(wheelRad, 2), true);

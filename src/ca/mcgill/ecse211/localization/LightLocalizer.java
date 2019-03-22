@@ -37,7 +37,7 @@ public class LightLocalizer {
   private static LightSensorController leftLightSensor;
   private static LightSensorController rightLightSensor;
 
-  private double color = 0.25;
+  private double color = 0.2;
 
   /**
    * Constructor for the LightLocalizer class

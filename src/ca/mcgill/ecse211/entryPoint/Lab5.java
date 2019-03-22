@@ -31,10 +31,11 @@ import ca.mcgill.ecse211.WiFi.*;
  */
 public class Lab5 {
 
-  public static EV3LargeRegulatedMotor sensorMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("C"));
+  public static EV3LargeRegulatedMotor sensorMotor =
+      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("C"));
   public static final TextLCD lcd = LocalEV3.get().getTextLCD();
-  public static final int TR = -1;  //0: red can, 1: green can, 2: yellow can, 3: blue can 
-    
+  public static final int TR = -1; // 0: red can, 1: green can, 2: yellow can, 3: blue can
+
   public static EV3MediumRegulatedMotor canGrabbingMotor =
       new EV3MediumRegulatedMotor(LocalEV3.get().getPort("D"));
 
@@ -47,104 +48,132 @@ public class Lab5 {
   private static SensorModes us = new EV3UltrasonicSensor(sensorPort);
   private static SampleProvider sampleProvider = us.getMode("Distance");
 
-  //for correction
+  // for correction
   private static final Port rightLightPort = LocalEV3.get().getPort("S3");
   private static final EV3ColorSensor rightLightMode = new EV3ColorSensor(rightLightPort);
-//  private static SampleProvider rightLightSampleProvider = rightLightMode.getMode("Red");
-  
+  // private static SampleProvider rightLightSampleProvider = rightLightMode.getMode("Red");
+
   private static final Port leftLightPort = LocalEV3.get().getPort("S2");
   private static final EV3ColorSensor leftLightMode = new EV3ColorSensor(leftLightPort);
-//  private static SampleProvider leftLightSampleProvider = leftLightMode.getMode("Red");
-  
-//  private static int LL_X = 2;
-//  private static int LL_Y = 2;
-//  private static int UR_X = 4;
-//  private static int UR_Y = 3;
-//  private static int corner = 0;
-//  private static int SZ_LL_X = 6;
-//  private static int SZ_LL_Y = 0;
-//  private static int SZ_UR_X = 14;
-//  private static int SZ_UR_Y = 5;
-  
+  // private static SampleProvider leftLightSampleProvider = leftLightMode.getMode("Red");
+
+  // private static int LL_X = 2;
+  // private static int LL_Y = 2;
+  // private static int UR_X = 4;
+  // private static int UR_Y = 3;
+  // private static int corner = 0;
+  // private static int SZ_LL_X = 6;
+  // private static int SZ_LL_Y = 0;
+  // private static int SZ_UR_X = 14;
+  // private static int SZ_UR_Y = 5;
+
   public static double TRACK = 11.99;
   public static double WHEEL_RAD = 2.06;
-  
-  public static int  TURNING_SPEED = 70;
-  public static final int  FORWARD_SPEED = 200;
+
+  public static int TURNING_SPEED = 70;
+  public static final int FORWARD_SPEED = 200;
   public static final double TILE_SIZE = 30.48;
-  
+
   /*
    * Serves as Visual aid for now for calling Variable names
    * 
-   *redTeam, greenTeam, redCorner, greenCorner, Red_LL_x, Red_LL_y, Red_UR_x, Red_UR_y, 
-   *Green_LL_x, Green_LL_y, Green_UR_x, Green_UR_y, Island_LL_x, Island_LL_y, Island_UR_x, Island_UR_y, 
-   *TNR_LL_x, TNR_LL_y, TNR_UR_x, TNR_UR_y, TNG_LL_x, TNG_LL_y, TNG_UR_x, TNG_UR_y
+   * redTeam, greenTeam, redCorner, greenCorner, Red_LL_x, Red_LL_y, Red_UR_x, Red_UR_y, Green_LL_x,
+   * Green_LL_y, Green_UR_x, Green_UR_y, Island_LL_x, Island_LL_y, Island_UR_x, Island_UR_y,
+   * TNR_LL_x, TNR_LL_y, TNR_UR_x, TNR_UR_y, TNG_LL_x, TNG_LL_y, TNG_UR_x, TNG_UR_y
    *
    */
- 
-  
-  private static final LightSensorController leftLightSensor = new LightSensorController(leftLightMode);
-  private static final LightSensorController rightLightSensor = new LightSensorController(rightLightMode);
-  
+
+
+  private static final LightSensorController leftLightSensor =
+      new LightSensorController(leftLightMode);
+  private static final LightSensorController rightLightSensor =
+      new LightSensorController(rightLightMode);
+
   public static int ACCELERATION = 300;
 
   /**
-   * the entry point of the whole program. Run this class to start color detection at stationary position
+   * the entry point of the whole program. Run this class to start color detection at stationary
+   * position
+   * 
    * @param str
    */
-  public static void main(String str[]) { 
-    
-//    WiFi.getData();
+  public static void main(String str[]) {
 
-    Odometer odometer =null;
+    WiFi.getData();
+    
+    
+
+    Odometer odometer = null;
     try {
       odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD);
       Thread odoThread = new Thread(odometer);
-      odoThread.start();    
+      odoThread.start();
     } catch (OdometerExceptions e1) {
       // TODO Auto-generated catch block
       e1.printStackTrace();
     }
-    
-    //initialize OdometryCorrection
-    final OdometryCorrection odometryCorrection = new OdometryCorrection(odometer, leftMotor, rightMotor,leftLightSensor, rightLightSensor );
-    
-    
-    //initialize and start localization
+
+    // initialize OdometryCorrection
+    final OdometryCorrection odometryCorrection =
+        new OdometryCorrection(odometer, leftMotor, rightMotor, leftLightSensor, rightLightSensor);
+
+
+    // initialize and start localization
+    // try {
+    // UltrasonicLocalizer usLocalizer = new UltrasonicLocalizer(sampleProvider);
+    // usLocalizer.fallingEdge();
+    // } catch (OdometerExceptions e) {
+    // e.printStackTrace();
+    // }
+
+    // TODO: change the localize value based on the data from wifi!!!
+    LightLocalizer lightLocalizer =
+        new LightLocalizer(odometer, leftLightSensor, rightLightSensor, odometryCorrection);
+    lightLocalizer.startLocalize(0, 0, 0);
+
+
+
+    //
+    //// new Thread() {
+    //// public void run() {
+    //// odometryCorrection.waitingForCorrection();
+    //// }
+    //// }.start();
+    //
+    // //localization is done, initialize navigation
+
+    // //Testing data
+//    int LL_X = 4;
+//    int LL_Y = 6;
+//    int UR_X = 6;
+//    int UR_Y = 8;
+//    int TN_LL_X = 2;
+//    int TN_LL_Y = 3;
+//    int TN_UR_X = 3;
+//    int TN_UR_Y = 5;
+//    int corner = 0;
 //    try {
-//      UltrasonicLocalizer usLocalizer = new UltrasonicLocalizer(sampleProvider);
-//      usLocalizer.fallingEdge();
+//      NavigationWithObstacle navigation = new NavigationWithObstacle(leftMotor, rightMotor, TRACK,
+//          WHEEL_RAD, TN_LL_X, TN_LL_Y, TN_UR_X, TN_UR_Y, LL_X, LL_Y, UR_X, UR_Y, corner,
+//          sensorMotor, lcd, TR, sampleProvider, odometryCorrection, lightLocalizer);
+//      Sound.beep();
+//
+//      navigation.navigateToSearchingArea();
+//      Thread navigationThread = new Thread(navigation);
+//      navigationThread.start();
 //    } catch (OdometerExceptions e) {
+//      // TODO Auto-generated catch block
 //      e.printStackTrace();
 //    }
-    
-    //TODO: change the localize value based on the data from wifi!!!
-    LightLocalizer lightLocalizer = new LightLocalizer(odometer, leftLightSensor, rightLightSensor, odometryCorrection);
-    lightLocalizer.startLocalize(0, 0, 0);
-//    lightLocalizer.startLocalize(WiFi.localizeX*TILE_SIZE, WiFi.localizeY*TILE_SIZE, WiFi.localizeTheta);
-    
-//    //Testing data
-    int LL_X = 4;
-    int LL_Y = 6;
-    int UR_X = 6;
-    int UR_Y = 8;
-    int TN_LL_X = 2;
-    int TN_LL_Y = 3;
-    int TN_UR_X = 3;
-    int TN_UR_Y = 5;
-    int corner = 0;
-// 
-////    new Thread() {
-////      public void run() {
-////        odometryCorrection.waitingForCorrection();
-////      }
-////    }.start();
-//    
-//    //localization is done, initialize navigation
-    
-    
+
+
+    // beta demo with wifi
+    lightLocalizer.startLocalize(WiFi.localizeX * TILE_SIZE, WiFi.localizeY * TILE_SIZE,
+        WiFi.localizeTheta);
     try {
-      NavigationWithObstacle navigation = new NavigationWithObstacle(leftMotor, rightMotor, TRACK, WHEEL_RAD, TN_LL_X, TN_LL_Y, TN_UR_X, TN_UR_Y, LL_X, LL_Y, UR_X, UR_Y, corner, sensorMotor, lcd, TR, sampleProvider, odometryCorrection, lightLocalizer);
+      NavigationWithObstacle navigation = new NavigationWithObstacle(leftMotor, rightMotor, TRACK,
+          WHEEL_RAD, WiFi.TunLL_x, WiFi.TunLL_y, WiFi.TunUR_x, WiFi.TunUR_y, WiFi.LL_x, WiFi.LL_y, WiFi.UR_x, WiFi.UR_y, WiFi.corner,
+          sensorMotor, lcd, TR, sampleProvider, odometryCorrection);
       Sound.beep();
 
       navigation.navigateToSearchingArea();
@@ -154,7 +183,7 @@ public class Lab5 {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
-    
+
   }
-  
+
 }
