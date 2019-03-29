@@ -187,7 +187,7 @@ public class Lab5 {
 			NavigationWithObstacle navigation =
 					new NavigationWithObstacle(leftMotor, rightMotor, TRACK, WHEEL_RAD, WiFi.TunLL_x,
 							WiFi.TunLL_y, WiFi.TunUR_x, WiFi.TunUR_y, WiFi.SZ_LL_x, WiFi.SZ_LL_y, WiFi.SZ_UR_x, WiFi.SZ_UR_y,
-							WiFi.corner, sensorMotor, lcd, 1, sampleProvider, odometryCorrection);
+							WiFi.corner, sensorMotor, lcd, 1, sampleProvider, odometryCorrection, lightLocalizer);
 			//      Sound.beep();
 
 			navigation.navigateToSearchingArea();
