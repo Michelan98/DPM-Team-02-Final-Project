@@ -141,13 +141,13 @@ public class Lab5 {
 
 
 
-    // initialize and start localization
-    // try {
-    // UltrasonicLocalizer usLocalizer = new UltrasonicLocalizer(sampleProvider);
-    // usLocalizer.fallingEdge();
-    // } catch (OdometerExceptions e) {
-    // e.printStackTrace();
-    // }
+//     initialize and start localization
+     try {
+     UltrasonicLocalizer usLocalizer = new UltrasonicLocalizer(sampleProvider);
+     usLocalizer.fallingEdge();
+     } catch (OdometerExceptions e) {
+     e.printStackTrace();
+     }
 
 
 
@@ -199,6 +199,7 @@ public class Lab5 {
     } catch (OdometerExceptions e) {
       e.printStackTrace();
     }
+    navigation.initializeWayPointsAndAngle();
     navigation.navigateToSearchingArea();
     Thread navigationThread = new Thread(navigation);
     navigationThread.start();

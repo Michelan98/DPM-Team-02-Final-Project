@@ -90,7 +90,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   private OdometryCorrection odometryCorrection;
   private LightLocalizer lightLocalizer;
 
-  double[][] destinations = {{0, 0}, {0, 0}, {0, 0}};
+  static double[][] destinations = {{0, 0}, {0, 0}, {0, 0}};
 //   double[][] destinations = {{0, 0}, {0, 0}, {0, 0}, {0,0}, {0,0}};
   double[] correctionAngles = {0, 0, 0, 0};
   boolean xFirst = true;
@@ -593,7 +593,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
    * @param SZ_Y: y coordinate of the lower left corner of the searching area
    */
   public void navigateToSearchingArea() {
-
+    System.out.println(destinations[0][0]+" "+ destinations[0][1]);
     // travel to the first correction point
     while (!checkIfDone(destinations[0][0], destinations[0][1])) {
       travelTo(destinations[0][0], destinations[0][1], xFirst);
@@ -603,16 +603,12 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     //do correction at the first correction point
     System.out.println("doing correction");
     turnTo(correctionAngles[0]);
-    odometryCorrection.setSpeeds(75, 75);
-    odometryCorrection.moveForward();
     odometryCorrection.correct(correctionAngles[0]);
     double forwardDistance = TILE_SIZE / 2 - odometryCorrection.DISTANCE_TO_SENSOR;
     leftMotor.rotate(convertDistance(wheelRad, forwardDistance), true);
     rightMotor.rotate(convertDistance(wheelRad, forwardDistance), false);
     
     turnTo(correctionAngles[1]);
-    odometryCorrection.setSpeeds(75, 75);
-    odometryCorrection.moveForward();
     odometryCorrection.correct(correctionAngles[1]);
     leftMotor.rotate(convertDistance(wheelRad,
         3 * TILE_SIZE + (TILE_SIZE - odometryCorrection.DISTANCE_TO_SENSOR)), true);
@@ -653,16 +649,12 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     //do correction at the first correction point
     System.out.println("doing correction");
     turnTo(correctionAngles[2]);
-    odometryCorrection.setSpeeds(75, 75);
-    odometryCorrection.moveForward();
     odometryCorrection.correct(correctionAngles[2]);
     double forwardDistance = TILE_SIZE / 2 - odometryCorrection.DISTANCE_TO_SENSOR;
     leftMotor.rotate(convertDistance(wheelRad, forwardDistance), true);
     rightMotor.rotate(convertDistance(wheelRad, forwardDistance), false);
     
     turnTo(correctionAngles[3]);
-    odometryCorrection.setSpeeds(75, 75);
-    odometryCorrection.moveForward();
     odometryCorrection.correct(correctionAngles[3]);
     leftMotor.rotate(convertDistance(wheelRad,
         3 * TILE_SIZE + (TILE_SIZE - odometryCorrection.DISTANCE_TO_SENSOR)), true);

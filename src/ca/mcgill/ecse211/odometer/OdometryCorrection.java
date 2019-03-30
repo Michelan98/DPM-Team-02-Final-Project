@@ -86,10 +86,10 @@ public class OdometryCorrection {
 			if (rightLightSensor.lineDetected()) {
 				rightLineDetected = true;
 				// Stop the right motor
-
+				stopMoving(false, true);
 			} else if (leftLightSensor.lineDetected()) {
 				leftLineDetected = true;
-
+				stopMoving(true, false);
 				// Stop the left motor
 			}
 		}
@@ -105,8 +105,10 @@ public class OdometryCorrection {
 			// If the other line detected, stop the motors
 			if (rightLineDetected && leftLightSensor.lineDetected()) {
 				leftLineDetected = true;
+				stopMotors();
 			} else if (leftLineDetected && rightLightSensor.lineDetected()) {
 				rightLineDetected = true;
+				stopMotors();
 			}
 		}
 
@@ -123,56 +125,6 @@ public class OdometryCorrection {
 
 	}
 
-	public void waitingForCorrection() {
-
-
-		boolean rightLineDetected = false;
-		boolean leftLineDetected = false;
-
-		while (!leftLineDetected && !rightLineDetected) {
-			// double rightSample = rightLS.fetch();
-			// double leftSample = leftLS.fetch();
-			if (rightLightSensor.lineDetected()) {
-				rightLineDetected = true;
-				// Stop the right motor
-
-			} else if (leftLightSensor.lineDetected()) {
-				leftLineDetected = true;
-
-				// Stop the left motor
-			}
-		}
-
-		oneLineDetected = rightLineDetected;
-		otherLineDetected = leftLineDetected;
-
-		System.out.println("waitingForCorrection 1" + oneLineDetected + " 2 "+otherLineDetected);
-
-
-		//    // Get the odometer's reading
-		//
-		//    // Keep moving the left/right motor until both lines have been detected
-		//    while ((!leftLineDetected || !rightLineDetected)) {
-		//      // If the other line detected, stop the motors
-		//      if (rightLineDetected && leftLightSensor.fetch() < THRESHOLD) {
-		//        leftLineDetected = true;
-		//      } else if (leftLineDetected && rightLightSensor.fetch() < THRESHOLD) {
-		//        rightLineDetected = true;
-		//      }
-		//    }
-		//    
-		//    oneLineDetected = rightLineDetected;
-		//    otherLineDetected = leftLineDetected;
-		//    
-		//    // correcting on theta
-		//    correctOdometer(thetaCorrection);    
-		//    
-		//    // preparing for crossing a grid line after correcting
-		//    resetMotors();  
-		//    setSpeeds(150, 150);
-
-
-	}
 
 	/**
 	 * Correct odometer
