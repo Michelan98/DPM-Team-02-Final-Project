@@ -40,7 +40,7 @@ public class UltrasonicLocalizer implements TimerListener {
 	  private static double previousUsDistance;
 	  private static int filter_control = 4;
 	  
-	  private int ultrasonicSpeed = 220;
+	  private int ultrasonicSpeed = 270;
 
 	  public UltrasonicLocalizer(SampleProvider usSampleProvider) throws OdometerExceptions {
 
@@ -48,8 +48,8 @@ public class UltrasonicLocalizer implements TimerListener {
 	    this.usSampleProvider = usSampleProvider;
 	    usSample = new float[usSampleProvider.sampleSize()];
 
-	    Lab5.leftMotor.setAcceleration(Lab5.ACCELERATION);
-	    Lab5.rightMotor.setAcceleration(Lab5.ACCELERATION);
+	    Lab5.leftMotor.setAcceleration(1000);
+	    Lab5.rightMotor.setAcceleration(1000);
 
 	  }
 
