@@ -32,7 +32,7 @@ public class LightSensorController {
 	public LightSensorController(EV3ColorSensor lightSensor) {
 		this.lightSensor = lightSensor;
 		lightSamples = lightSensor.getRedMode();
-		lsData = new float[lightSensor.sampleSize()];
+		lsData = new float[lightSensor.sampleSize()]; 
 	}
 	
 	/**
