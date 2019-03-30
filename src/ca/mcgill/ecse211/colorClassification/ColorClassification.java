@@ -36,6 +36,7 @@ public class ColorClassification implements TimerListener {
 //      {0.250897607, 0.943892592, 0.207426042}, {0.833111075, 0.526009994, 0.156434809},
 //      {0.298917037, 0.726693533, 0.612517117}, {0.711488185, 0.570923876, 0.377780294}};
   
+  //1: blue, 2: green, 3: yellow, 4: red, 5: white
   private double canRGBNormalizedMeans[][] = {{0.298917037, 0.726693533, 0.612517117},{0.250897607, 0.943892592, 0.207426042},
       {0.833111075, 0.526009994, 0.156434809},{0.927464231, 0.317823524, 0.130221225},{0.711488185, 0.570923876, 0.377780294}};
 
@@ -54,7 +55,7 @@ public class ColorClassification implements TimerListener {
   public ColorClassification(EV3LargeRegulatedMotor sensorMotor, TextLCD lcd, int TR) {
     this.sensorMotor = sensorMotor;
     this.lcd = lcd;
-    this.TR = TR;
+    this.TR = TR;   //1 larger than the index
   }
 
   /**
@@ -69,34 +70,33 @@ public class ColorClassification implements TimerListener {
    */
   public boolean colorClassify() throws InterruptedException {
 
-    Timer timer = new Timer(100, new ColorClassification(sensorMotor, lcd, TR));
+    Timer timer = new Timer(30, new ColorClassification(sensorMotor, lcd, TR));
     timer.start();
 
     //rotate 220 degrees around the can and then rotate back to the original position
-    sensorMotor.setAcceleration(50);
-    sensorMotor.setSpeed(70);
-    sensorMotor.rotate(-150);
-    sensorMotor.rotate(150);
+    sensorMotor.setSpeed(130);
+    sensorMotor.rotate(-110);
+    sensorMotor.rotate(110);
     //stop the timer, so no sample will be fetched during calculation time
     timer.stop();
 
     //find out the color with largest number of "hit"
     int result = -1;
-    int temp = -1;
+    int temp = 0;   //-1
     for (int i = 0; i < 4; i++) {
+      System.out.println("color count" + i+ " "+ colorCount[i]);
       if (temp < colorCount[i]) {
         temp = colorCount[i];
         result = i+1;
       }
     }
+    
+    System.out.println("result"+result);
 
     //display the result on the lcd
     switch (result) {
-      case 4:
-        lcd.drawString("Red", 0, 2);
-        Sound.playTone(100, 500);
-        Sound.playTone(100, 500);
-        Sound.playTone(100, 500);
+      case 1:
+        lcd.drawString("Blue", 0, 2);
         Sound.playTone(100, 500);
         break;
       case 2:
@@ -110,8 +110,11 @@ public class ColorClassification implements TimerListener {
         Sound.playTone(100, 500);
         Sound.playTone(100, 500);
         break;
-      case 1:
-        lcd.drawString("Blue", 0, 2);
+      case 4:
+        lcd.drawString("Red", 0, 2);
+        Sound.playTone(100, 500);
+        Sound.playTone(100, 500);
+        Sound.playTone(100, 500);
         Sound.playTone(100, 500);
         break;
     }
@@ -156,7 +159,9 @@ public class ColorClassification implements TimerListener {
         result = i;
       }
     }
-    colorCount[result]++;
+    if(result != -1) {
+      colorCount[result]++;
+    }
 
   }
 
