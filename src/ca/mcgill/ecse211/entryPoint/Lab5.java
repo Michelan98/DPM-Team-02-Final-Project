@@ -207,15 +207,6 @@ public class Lab5 {
 
   }
 
-
-    navigation.initializeWayPointsAndAngle();
-    navigation.navigateToSearchingArea();
-    Thread navigationThread = new Thread(navigation);
-    navigationThread.start();
-    while(navigationThread.isAlive()) {}
-    navigation.leaveSearchingArea();
-}
-
   private float getTimeRemaining() {
     return TIME_LIMIT - ((System.currentTimeMillis() - startTime) / 1000f);
   }

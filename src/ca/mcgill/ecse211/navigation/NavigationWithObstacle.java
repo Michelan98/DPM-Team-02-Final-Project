@@ -330,145 +330,10 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
         rightMotor.forward();
       }
     }
-    }
-    else {
-      if (Math.abs(distanceY) > navigationAccuracy) {
-
-        
-        if (distanceY < 0 && Math.abs(theta - 180) > thetaAccuracy) {
-          turnTo(180);
-        } else if (distanceY > 0) {
-          if (theta > 180 && Math.abs(theta - 360) > thetaAccuracy) {
-            turnTo(0);
-          } else if (theta < 180 && Math.abs(theta - 0) > thetaAccuracy) {
-            turnTo(0);
-          }
-        }
-
-          leftMotor.forward();
-          rightMotor.forward();
-
-
-      } else {
-        // x is done
-        if (!offsetAdded) {
-           leftMotor.rotate(convertDistance(wheelRad, distanceX), true);
-           rightMotor.rotate(convertDistance(wheelRad, distanceX), false);
-          offsetAdded = true;
-        }
-        if (distanceX < 0 && Math.abs(theta - 270) > thetaAccuracy) {
-          turnTo(270);
-        } else if (distanceX > 0 && Math.abs(theta - 90) > thetaAccuracy) {
-          turnTo(90);
-        }
-
-        leftMotor.forward();
-        rightMotor.forward();
-    }
-    }
 
 
   }
   
-//  public void travelTo(double x, double y, boolean xFirst, boolean correction, double[] angles) {
-//
-//
-//    // get the position reading from the odometer
-//    double pos[] = odo.getXYT();
-//    double currentX = pos[0];
-//    double currentY = pos[1];
-//    double theta = pos[2];
-//
-//    leftMotor.setSpeed(FORWARD_SPEED);
-//    rightMotor.setSpeed(FORWARD_SPEED);
-//
-//    // run along the line
-//    double distanceX = x * TILE_SIZE - currentX;
-//    double distanceY = y * TILE_SIZE - currentY;
-//
-//    if (xFirst) {
-//      if (Math.abs(distanceX) > navigationAccuracy) {
-//        if (distanceX < 0 && Math.abs(theta - 270) > thetaAccuracy) {
-//          turnTo(270);
-//        } else if (distanceX > 0 && Math.abs(theta - 90) > thetaAccuracy) {
-//          turnTo(90);
-//        }
-//
-//        leftMotor.rotate(convertDistance(wheelRad, distanceX));
-//        rightMotor.rotate(convertDistance(wheelRad, distanceX));
-//        
-//        if(correction && angles.length !=0) {
-//          System.out.println("doing correction");
-//          turnTo(angles[0]);
-//          odometryCorrection.setSpeeds(75, 75);
-//          odometryCorrection.moveForward();
-//          odometryCorrection.correct(angles[0]);
-//          double forwardDistance = TILE_SIZE / 2 - odometryCorrection.DISTANCE_TO_SENSOR;
-//          leftMotor.rotate(convertDistance(wheelRad, forwardDistance), true);
-//          rightMotor.rotate(convertDistance(wheelRad, forwardDistance), false);
-//        }
-//
-//
-//      } else {
-//
-//        if (distanceY < 0 && Math.abs(theta - 180) > thetaAccuracy) {
-//          turnTo(180);
-//        } else if (distanceY > 0) {
-//          if (theta > 180 && Math.abs(theta - 360) > thetaAccuracy) {
-//            turnTo(0);
-//          } else if (theta < 180 && Math.abs(theta - 0) > thetaAccuracy) {
-//            turnTo(0);
-//          }
-//        }
-//
-//        leftMotor.rotate(convertDistance(wheelRad, distanceY));
-//        rightMotor.rotate(convertDistance(wheelRad, distanceY));
-//        
-//        if(correction) {
-//          turnTo(angles[1]);
-//          odometryCorrection.setSpeeds(75, 75);
-//          odometryCorrection.moveForward();
-//          odometryCorrection.correct(angles[1]);
-//          leftMotor.rotate(convertDistance(wheelRad,
-//              3 * TILE_SIZE + (TILE_SIZE - odometryCorrection.DISTANCE_TO_SENSOR)), true);
-//          rightMotor.rotate(convertDistance(wheelRad,
-//              3 * TILE_SIZE + (TILE_SIZE - odometryCorrection.DISTANCE_TO_SENSOR)), false);
-//        }
-//
-//      }
-//    } else {
-//      if (Math.abs(distanceY) > navigationAccuracy) {
-//
-//
-//        if (distanceY < 0 && Math.abs(theta - 180) > thetaAccuracy) {
-//          turnTo(180);
-//        } else if (distanceY > 0) {
-//          if (theta > 180 && Math.abs(theta - 360) > thetaAccuracy) {
-//            turnTo(0);
-//          } else if (theta < 180 && Math.abs(theta - 0) > thetaAccuracy) {
-//            turnTo(0);
-//          }
-//        }
-//
-//        leftMotor.rotate(convertDistance(wheelRad, distanceY));
-//        rightMotor.rotate(convertDistance(wheelRad, distanceY));
-//
-//
-//      } else {
-//        // Y is done
-//        if (distanceX < 0 && Math.abs(theta - 270) > thetaAccuracy) {
-//          turnTo(270);
-//        } else if (distanceX > 0 && Math.abs(theta - 90) > thetaAccuracy) {
-//          turnTo(90);
-//        }
-//
-//        leftMotor.rotate(convertDistance(wheelRad, distanceX));
-//        rightMotor.rotate(convertDistance(wheelRad, distanceX));
-//      }
-//    }
-//
-//
-//  }
 
   /**
    * This method causes the robot to turn to the absolute heading theta the method turn a minimal
@@ -597,10 +462,6 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
    */
   public void startCanGrabbing() {
     canGrabbing.grabCan();
-  }
-
-  public void releaseCan() {
-    canGrabbing.releaseCan();
   }
 
   public void releaseCan() {
