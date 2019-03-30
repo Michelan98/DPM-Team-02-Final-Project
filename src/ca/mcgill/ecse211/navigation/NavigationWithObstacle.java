@@ -1,6 +1,7 @@
 package ca.mcgill.ecse211.navigation;
 
 import java.util.ArrayList;
+import ca.mcgill.ecse211.WiFi.WiFi;
 import ca.mcgill.ecse211.canGrabbing.CanGrabbing;
 import ca.mcgill.ecse211.colorClassification.ColorClassification;
 import ca.mcgill.ecse211.entryPoint.Lab5;
@@ -75,7 +76,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   private static int previousUsDistance = 0;
 
   private enum State {
-    INIT, TRAVELLING, SCANNING, COLORDETECTION, AVOIDINGCAN, GRABBINGCAN, LEAVING, CORRECTING
+    INIT, TRAVELLING, SCANNING, COLORDETECTION, AVOIDINGCAN, GRABBINGCAN
   };
 
   private static State state;
@@ -89,10 +90,15 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   private OdometryCorrection odometryCorrection;
   private LightLocalizer lightLocalizer;
 
-  double[][] destinations = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
+  double[][] destinations = {{0, 0}, {0, 0}, {0, 0}};
+//   double[][] destinations = {{0, 0}, {0, 0}, {0, 0}, {0,0}, {0,0}};
+  double[] correctionAngles = {0, 0, 0, 0};
   boolean xFirst = true;
-  // 0: localization point before tunnel, 1: point before tunnel, 2: point after tunnel, 3:
-  // localization point after tunnel, 4: lower left corner sz
+  // destinaiton: 0: correction point at the entry of the tunnel, 1: correction point at the exit of
+  // the tunnel, 2: ll_sz
+
+  // correction angle: 0: first correction angle, 1: second correction angle, ...
+
 
 
   CanGrabbing canGrabbing = null;
@@ -101,8 +107,10 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   public NavigationWithObstacle(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,
       double track, double wheelRad, int TN_LL_X, int TN_LL_Y, int TN_UR_X, int TN_UR_Y, int LLX,
       int LLY, int URX, int URY, int cornerNum, EV3LargeRegulatedMotor sensorMotor, TextLCD lcd,
-      int TR, SampleProvider sampleProvider, OdometryCorrection odometryCorrection, LightLocalizer lightLocalizer)
-      throws OdometerExceptions {
+
+      int TR, SampleProvider sampleProvider, OdometryCorrection odometryCorrection,
+      LightLocalizer lightLocalizer) throws OdometerExceptions {
+
 
     odo = Odometer.getOdometer();
     this.leftMotor = leftMotor;
@@ -144,13 +152,13 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
     canLocation = new ArrayList<Double>();
 
-    // TODO: don't forget to change it to INIT!!
     state = State.INIT;
     dataset = new ArrayList<Double>();
 
     this.odometryCorrection = odometryCorrection;
 
-     this.lightLocalizer = lightLocalizer;
+    this.lightLocalizer = lightLocalizer;
+
 
     canGrabbing = new CanGrabbing(Lab5.canGrabbingMotor);
   }
@@ -167,7 +175,6 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
               TN_UR_X, TN_UR_Y, SZ_LL_X, SZ_LL_Y, SZ_UR_X, SZ_UR_Y, corner, sensorMotor, lcd, TR,
               sampleProvider, odometryCorrection, lightLocalizer));
     } catch (OdometerExceptions e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
     timer.start();
@@ -189,11 +196,6 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           break;
         }
         case TRAVELLING: {
-
-          // else if (OdometryCorrection.oneLineDetected || OdometryCorrection.otherLineDetected){
-          // state = State.CORRECTING;
-          // System.out.println("transit to correcting");
-          // }
           if (!checkIfDone(currentDestination[0], currentDestination[1])) {
             travelTo(currentDestination[0], currentDestination[1], true);
           } else if (checkIfDone(currentDestination[0], currentDestination[1])) {
@@ -204,24 +206,6 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           }
 
           break;
-        }
-        case CORRECTING: {
-          double theta = odo.getXYT()[2];
-          double correctedHeading = 0;
-          if ((theta < 10 && theta > 0) || (theta > 350 && theta < 360)) {
-            correctedHeading = 0;
-          } else if (theta < 100 && theta > 80) {
-            correctedHeading = 90;
-          } else if (theta > 170 && theta < 190) {
-            correctedHeading = 180;
-          } else if (theta < 280 && theta > 260) {
-            correctedHeading = 270;
-          }
-          odometryCorrection.correct(correctedHeading);
-          state = State.TRAVELLING;
-          System.out
-              .println("odo " + odo.getXYT()[0] + " " + odo.getXYT()[1] + " " + odo.getXYT()[2]);
-          System.out.println("going to travelling");
         }
         case SCANNING: {
           releaseCan();
@@ -238,19 +222,6 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
             usDistance = (int) (sample[0] * 100); // convert to cm
             startColorDetection();
             if (isTargetCan) {
-              // state = State.GRABBINGCAN;
-              // TODO: for beta demo
-              Sound.beep();
-              Sound.beep();
-              Sound.beep();
-              Sound.beep();
-              Sound.beep();
-              Sound.beep();
-              Sound.beep();
-              Sound.beep();
-              Sound.beep();
-              Sound.beep();
-
               break;
             }
           }
@@ -262,54 +233,17 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
         }
         case GRABBINGCAN: {
           startCanGrabbing();
-//          state = State.LEAVING;
-          
+
           terminateStateMachine = true;
           break;
         }
-        case AVOIDINGCAN: {
-          canAvoidance();
-          state = State.TRAVELLING;
-          break;
-        }
-//        case LEAVING: {
-//          // leave the searching area and go to the tunnel
-//
-//          if (!checkIfDone(currentDestination[0], currentDestination[1])) {
-//            travelTo(currentDestination[0], currentDestination[1]);
-//          } else if (checkIfDone(currentDestination[0], currentDestination[1])) {
-//            // TODO: for beta demo only
-//            // turnTo(0);
-//            // leftMotor.stop();
-//            // rightMotor.stop();
-//            // Sound.beep();
-//            // Sound.beep();
-//            // Sound.beep();
-//            // Sound.beep();
-//            // Sound.beep();
-//          }
-//          break;
-//        }
       }
       if (terminateStateMachine) {
         break;
       }
 
-      // try {
-      // Thread.sleep(50);
-      // } catch (InterruptedException e) {
-      // // TODO Auto-generated catch block
-      // e.printStackTrace();
-      // }
+
     }
-//    turnTo(0);
-//    leftMotor.stop();
-//    rightMotor.stop();
-//    Sound.beep();
-//    Sound.beep();
-//    Sound.beep();
-//    Sound.beep();
-//    Sound.beep();
     timer.stop();
   }
 
@@ -337,47 +271,64 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     double distanceX = x * TILE_SIZE - currentX;
     double distanceY = y * TILE_SIZE - currentY;
 
-    if(xFirst) {
-    if (Math.abs(distanceX) > navigationAccuracy) {
-      if (distanceX < 0 && Math.abs(theta - 270) > thetaAccuracy) {
-        turnTo(270);
-      } else if (distanceX > 0 && Math.abs(theta - 90) > thetaAccuracy) {
-        turnTo(90);
-      }
+    if (xFirst) {
+      if (Math.abs(distanceX) > navigationAccuracy) {
+        if (distanceX < 0 && Math.abs(theta - 270) > thetaAccuracy) {
+          turnTo(270);
+        } else if (distanceX > 0 && Math.abs(theta - 90) > thetaAccuracy) {
+          turnTo(90);
+        }
+
 
         leftMotor.forward();
         rightMotor.forward();
 
-//      leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] {rightMotor});
-//      leftMotor.startSynchronization();
-//      leftMotor.forward();
-//      rightMotor.forward();
-//      leftMotor.endSynchronization();
+      } else {
+        // x is done
 
-    } else {
-      // x is done
-      if (!offsetAdded) {
-        // change the 3 to distanceX?
-         leftMotor.rotate(convertDistance(wheelRad, distanceX), true);
-         rightMotor.rotate(convertDistance(wheelRad, distanceX), false);
-
-
-        offsetAdded = true;
-      }
-      
-      if (distanceY < 0 && Math.abs(theta - 180) > thetaAccuracy) {
-        turnTo(180);
-      } else if (distanceY > 0) {
-        if (theta > 180 && Math.abs(theta - 360) > thetaAccuracy) {
-          turnTo(0);
-        } else if (theta < 180 && Math.abs(theta - 0) > thetaAccuracy) {
-          turnTo(0);
+        if (distanceY < 0 && Math.abs(theta - 180) > thetaAccuracy) {
+          turnTo(180);
+        } else if (distanceY > 0) {
+          if (theta > 180 && Math.abs(theta - 360) > thetaAccuracy) {
+            turnTo(0);
+          } else if (theta < 180 && Math.abs(theta - 0) > thetaAccuracy) {
+            turnTo(0);
+          }
         }
+
+        leftMotor.forward();
+        rightMotor.forward();
+
       }
+    } else {
+      if (Math.abs(distanceY) > navigationAccuracy) {
 
-      leftMotor.forward();
-      rightMotor.forward();
 
+        if (distanceY < 0 && Math.abs(theta - 180) > thetaAccuracy) {
+          turnTo(180);
+        } else if (distanceY > 0) {
+          if (theta > 180 && Math.abs(theta - 360) > thetaAccuracy) {
+            turnTo(0);
+          } else if (theta < 180 && Math.abs(theta - 0) > thetaAccuracy) {
+            turnTo(0);
+          }
+        }
+
+        leftMotor.forward();
+        rightMotor.forward();
+
+
+      } else {
+        // x is done
+        if (distanceX < 0 && Math.abs(theta - 270) > thetaAccuracy) {
+          turnTo(270);
+        } else if (distanceX > 0 && Math.abs(theta - 90) > thetaAccuracy) {
+          turnTo(90);
+        }
+
+        leftMotor.forward();
+        rightMotor.forward();
+      }
     }
     }
     else {
@@ -418,6 +369,106 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
 
   }
+  
+//  public void travelTo(double x, double y, boolean xFirst, boolean correction, double[] angles) {
+//
+//
+//    // get the position reading from the odometer
+//    double pos[] = odo.getXYT();
+//    double currentX = pos[0];
+//    double currentY = pos[1];
+//    double theta = pos[2];
+//
+//    leftMotor.setSpeed(FORWARD_SPEED);
+//    rightMotor.setSpeed(FORWARD_SPEED);
+//
+//    // run along the line
+//    double distanceX = x * TILE_SIZE - currentX;
+//    double distanceY = y * TILE_SIZE - currentY;
+//
+//    if (xFirst) {
+//      if (Math.abs(distanceX) > navigationAccuracy) {
+//        if (distanceX < 0 && Math.abs(theta - 270) > thetaAccuracy) {
+//          turnTo(270);
+//        } else if (distanceX > 0 && Math.abs(theta - 90) > thetaAccuracy) {
+//          turnTo(90);
+//        }
+//
+//        leftMotor.rotate(convertDistance(wheelRad, distanceX));
+//        rightMotor.rotate(convertDistance(wheelRad, distanceX));
+//        
+//        if(correction && angles.length !=0) {
+//          System.out.println("doing correction");
+//          turnTo(angles[0]);
+//          odometryCorrection.setSpeeds(75, 75);
+//          odometryCorrection.moveForward();
+//          odometryCorrection.correct(angles[0]);
+//          double forwardDistance = TILE_SIZE / 2 - odometryCorrection.DISTANCE_TO_SENSOR;
+//          leftMotor.rotate(convertDistance(wheelRad, forwardDistance), true);
+//          rightMotor.rotate(convertDistance(wheelRad, forwardDistance), false);
+//        }
+//
+//
+//      } else {
+//
+//        if (distanceY < 0 && Math.abs(theta - 180) > thetaAccuracy) {
+//          turnTo(180);
+//        } else if (distanceY > 0) {
+//          if (theta > 180 && Math.abs(theta - 360) > thetaAccuracy) {
+//            turnTo(0);
+//          } else if (theta < 180 && Math.abs(theta - 0) > thetaAccuracy) {
+//            turnTo(0);
+//          }
+//        }
+//
+//        leftMotor.rotate(convertDistance(wheelRad, distanceY));
+//        rightMotor.rotate(convertDistance(wheelRad, distanceY));
+//        
+//        if(correction) {
+//          turnTo(angles[1]);
+//          odometryCorrection.setSpeeds(75, 75);
+//          odometryCorrection.moveForward();
+//          odometryCorrection.correct(angles[1]);
+//          leftMotor.rotate(convertDistance(wheelRad,
+//              3 * TILE_SIZE + (TILE_SIZE - odometryCorrection.DISTANCE_TO_SENSOR)), true);
+//          rightMotor.rotate(convertDistance(wheelRad,
+//              3 * TILE_SIZE + (TILE_SIZE - odometryCorrection.DISTANCE_TO_SENSOR)), false);
+//        }
+//
+//      }
+//    } else {
+//      if (Math.abs(distanceY) > navigationAccuracy) {
+//
+//
+//        if (distanceY < 0 && Math.abs(theta - 180) > thetaAccuracy) {
+//          turnTo(180);
+//        } else if (distanceY > 0) {
+//          if (theta > 180 && Math.abs(theta - 360) > thetaAccuracy) {
+//            turnTo(0);
+//          } else if (theta < 180 && Math.abs(theta - 0) > thetaAccuracy) {
+//            turnTo(0);
+//          }
+//        }
+//
+//        leftMotor.rotate(convertDistance(wheelRad, distanceY));
+//        rightMotor.rotate(convertDistance(wheelRad, distanceY));
+//
+//
+//      } else {
+//        // Y is done
+//        if (distanceX < 0 && Math.abs(theta - 270) > thetaAccuracy) {
+//          turnTo(270);
+//        } else if (distanceX > 0 && Math.abs(theta - 90) > thetaAccuracy) {
+//          turnTo(90);
+//        }
+//
+//        leftMotor.rotate(convertDistance(wheelRad, distanceX));
+//        rightMotor.rotate(convertDistance(wheelRad, distanceX));
+//      }
+//    }
+//
+//
+//  }
 
   /**
    * This method causes the robot to turn to the absolute heading theta the method turn a minimal
@@ -552,62 +603,8 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     canGrabbing.releaseCan();
   }
 
-
-  /**
-   * This method drives the robot to avoid a can.
-   */
-  private void canAvoidance() {
-
-    leftMotor.setSpeed(TURNING_SPEED);
-    rightMotor.setSpeed(TURNING_SPEED);
-
-    // turn right 90 degree
-    leftMotor.rotate(convertAngle(wheelRad, track, 90), true);
-    rightMotor.rotate(-convertAngle(wheelRad, track, 90), false);
-
-    leftMotor.setSpeed(FORWARD_SPEED);
-    rightMotor.setSpeed(FORWARD_SPEED + 2);
-
-    leftMotor.rotate(convertDistance(wheelRad, TILE_SIZE * 0.7), true);
-    rightMotor.rotate(convertDistance(wheelRad, TILE_SIZE * 0.7), false);
-
-    leftMotor.setSpeed(TURNING_SPEED);
-    rightMotor.setSpeed(TURNING_SPEED);
-
-    // turn left 90 degree
-    leftMotor.rotate(-convertAngle(wheelRad, track, 90), true);
-    rightMotor.rotate(convertAngle(wheelRad, track, 90), false);
-
-    leftMotor.setSpeed(FORWARD_SPEED);
-    rightMotor.setSpeed(FORWARD_SPEED + 2);
-
-    leftMotor.rotate(convertDistance(wheelRad, TILE_SIZE * 1.2), true);
-    rightMotor.rotate(convertDistance(wheelRad, TILE_SIZE * 1.2), false);
-
-    // leftMotor.setSpeed(TURNING_SPEED);
-    // rightMotor.setSpeed(TURNING_SPEED);
-    //
-    // // turn left 90 degree
-    // leftMotor.rotate(-convertAngle(wheelRad, track, 90), true);
-    // rightMotor.rotate(convertAngle(wheelRad, track, 90), false);
-    //
-    // leftMotor.setSpeed(FORWARD_SPEED);
-    // rightMotor.setSpeed(FORWARD_SPEED + 2);
-    //
-    // leftMotor.rotate(convertDistance(wheelRad, TILE_SIZE * 0.7), true);
-    // rightMotor.rotate(convertDistance(wheelRad, TILE_SIZE * 0.7), false);
-    //
-    // leftMotor.setSpeed(TURNING_SPEED);
-    // rightMotor.setSpeed(TURNING_SPEED);
-    //
-    // // turn right 90 degree
-    // leftMotor.rotate(convertAngle(wheelRad, track, 90), true);
-    // rightMotor.rotate(-convertAngle(wheelRad, track, 90), false);
-    //
-    // // pass through the can continue the navigation
-    // double yCoordinate = Math.round(((float) odo.getXYT()[1] / (float) TILE_SIZE));
-    // if (yCoordinate == URY || yCoordinate == LLY)
-    // aCanOnBoundary = true;
+  public void releaseCan() {
+    canGrabbing.releaseCan();
   }
 
 
@@ -620,19 +617,6 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     double pos[] = odo.getXYT();
     if (Math.abs(destinationX * TILE_SIZE - pos[0]) < navigationAccuracy
         && Math.abs(destinationY * TILE_SIZE - pos[1]) < navigationAccuracy) {
-      // y offset
-      // leftMotor.rotate(convertDistance(wheelRad, 1.5), true);
-      // rightMotor.rotate(convertDistance(wheelRad, 1.5), false);
-
-      // leftMotor.synchronizeWith(new EV3LargeRegulatedMotor[] {rightMotor});
-      // leftMotor.startSynchronization();
-      // leftMotor.rotate(convertDistance(wheelRad, 1.5), true);
-      // rightMotor.rotate(convertDistance(wheelRad, 1.5), false);
-      // leftMotor.endSynchronization();
-      
-      offsetAdded = false;
-      //reset offset
-
       return true;
     } else {
       return false;
@@ -655,10 +639,10 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
       // TODO: what if it is not a square?
 
       int boundary =
-          (int) (Math.max(Math.round((SZ_LL_X + SZ_UR_X) / 2), Math.round((SZ_LL_Y + SZ_UR_Y) / 2))
+          (int) (Math.max(Math.round((SZ_UR_X - SZ_LL_X) / 2), Math.round((SZ_UR_Y - SZ_LL_Y) / 2))
               * TILE_SIZE);
       System.out.println("boundary" + boundary);
-      boundary = (int) (2 * TILE_SIZE);
+      // boundary = (int) (2 * TILE_SIZE);
       if (usDistance < boundary) {
 
         if (filter_count == 0) {
@@ -713,7 +697,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     rightMotor.rotate(-convertAngle(wheelRad, track, 360), false);
 
 
-
+    // TESTING CODE
     // try {
     // Thread.sleep(2000);
     // } catch (InterruptedException e) {
@@ -749,93 +733,37 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
    */
   public void navigateToSearchingArea() {
 
-    int c =-1;
-    int localizeTheta = 0;
-    if (TN_LL_Y + 2 == TN_UR_Y && TN_LL_X + 1 == TN_UR_X) {
-      if (corner == 2 || corner == 3) {
-        // case 1
-        c = 1;
-        destinations[0][0] = TN_LL_X;
-        destinations[0][1] = TN_UR_Y + 1;   //first localization point
-        destinations[1][0] = TN_LL_X + 0.5; // 0.45
-        destinations[1][1] = TN_UR_Y + 1;
-        destinations[2][0] = TN_LL_X + 0.5;
-        destinations[2][1] = TN_LL_Y - 1;
-        destinations[3][0] = TN_LL_X;
-        destinations[3][1] = TN_LL_Y - 1;
-      } else if (corner == 1 || corner == 0) {
-        // case 4
-        c = 4;
-        destinations[0][0] = TN_LL_X + 1;
-        destinations[0][1] = TN_LL_Y - 1;
-        destinations[1][0] = TN_LL_X + 0.5; // 0.55
-        destinations[1][1] = TN_LL_Y - 1;
-        destinations[2][0] = TN_LL_X + 0.5;
-        destinations[2][1] = TN_UR_Y + 1;
-        destinations[3][0] = TN_LL_X;
-        destinations[3][1] = TN_UR_Y + 1;
-      }
-    } else if (TN_LL_Y + 1 == TN_UR_Y && TN_LL_X + 2 == TN_UR_X) {
-
-      if (corner == 1 || corner == 2) {
-        // case 2
-        c = 2;
-        destinations[0][0] = TN_UR_X + 1;
-        destinations[0][1] = TN_UR_Y;
-        destinations[1][0] = TN_UR_X + 1;
-        destinations[1][1] = TN_UR_Y - 0.5; // 0.45
-        destinations[2][0] = TN_LL_X - 1;
-        destinations[2][1] = TN_UR_Y - 0.5;
-        destinations[3][0] = TN_LL_X - 1;
-        destinations[3][1] = TN_UR_Y;
-      } else if (corner == 0 || corner == 3) {
-        // case 3
-        c = 3;
-        destinations[0][0] = TN_LL_X - 1;
-        destinations[0][1] = TN_LL_Y;
-        destinations[1][0] = TN_LL_X - 1;
-        destinations[1][1] = TN_LL_Y + 0.5; // 0.45
-        destinations[2][0] = TN_UR_X + 1;
-        destinations[2][1] = TN_LL_Y + 0.5;
-        destinations[3][0] = TN_UR_X + 1;
-        destinations[3][1] = TN_UR_Y;
-      }
+    // travel to the first correction point
+    while (!checkIfDone(destinations[0][0], destinations[0][1])) {
+      travelTo(destinations[0][0], destinations[0][1], xFirst);
     }
 
-    destinations[4][0] = SZ_LL_X;
-    destinations[4][1] = SZ_LL_Y;
+
+    //do correction at the first correction point
+    System.out.println("doing correction");
+    turnTo(correctionAngles[0]);
+    odometryCorrection.setSpeeds(75, 75);
+    odometryCorrection.moveForward();
+    odometryCorrection.correct(correctionAngles[0]);
+    double forwardDistance = TILE_SIZE / 2 - odometryCorrection.DISTANCE_TO_SENSOR;
+    leftMotor.rotate(convertDistance(wheelRad, forwardDistance), true);
+    rightMotor.rotate(convertDistance(wheelRad, forwardDistance), false);
     
-
-    if(c == 3 || c ==2) {
-      xFirst = false;
+    turnTo(correctionAngles[1]);
+    odometryCorrection.setSpeeds(75, 75);
+    odometryCorrection.moveForward();
+    odometryCorrection.correct(correctionAngles[1]);
+    leftMotor.rotate(convertDistance(wheelRad,
+        3 * TILE_SIZE + (TILE_SIZE - odometryCorrection.DISTANCE_TO_SENSOR)), true);
+    rightMotor.rotate(convertDistance(wheelRad,
+        3 * TILE_SIZE + (TILE_SIZE - odometryCorrection.DISTANCE_TO_SENSOR)), false);
+    //exit the tunnel
+    
+    //travel to ll_sz
+    while (!checkIfDone(destinations[2][0], destinations[2][1])) {
+      travelTo(destinations[2][0], destinations[2][1], xFirst);
     }
 
-    // TODO: localize before passing the tunnel
-     while (!checkIfDone(destinations[0][0], destinations[0][1])) {
-     travelTo(destinations[0][0], destinations[0][1], xFirst);
-     }
-     turnTo(0);
-     lightLocalizer.startLocalize((int)destinations[0][0]*TILE_SIZE,
-     (int)destinations[0][1]*TILE_SIZE, 0);
-    // System.out.println(odo.getXYT()[0]+" "+ odo.getXYT()[1]+" "+odo.getXYT()[2]);
-    System.out.println("doing localization");
-
-    for (int i = 1; i < 5; i++) {
-
-      if(i != 3) {
-        System.out.println("navigating to the tunnel");
-        System.out.println("destinaiton " + destinations[i][0] + " " + destinations[i][1]);
-        //skip the second localization point
-        
-        while (!checkIfDone(destinations[i][0], destinations[i][1])) {
-          travelTo(destinations[i][0], destinations[i][1], xFirst);
-        }
-      
-      //offset in y direction
-      leftMotor.rotate(convertDistance(wheelRad, 2), true);
-      rightMotor.rotate(convertDistance(wheelRad, 2), false);
-      }
-    }
     turnTo(0);
     leftMotor.stop(true);
     rightMotor.stop(false);
@@ -843,52 +771,175 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     Sound.beep();
     Sound.beep();
 
-
-    startCanGrabbing();
     // close the thing and push cans away
+    startCanGrabbing();
+
   }
+
+
+
   
   /**
    * This method drives the robot to leave the searching area.
    */
   public void leaveSearchingArea() {
-    for (int i = 3; i > 0; i--) {
-      //skip the first localization point 
-      
-      System.out.println("navigating back");
-      System.out.println("destinaiton " + destinations[i][0] + " " + destinations[i][1]);
-      while (!checkIfDone(destinations[i][0], destinations[i][1])) {
-        travelTo(destinations[i][0], destinations[i][1], !xFirst);
-      }
-      leftMotor.rotate(convertDistance(wheelRad, 2), true);
-      rightMotor.rotate(convertDistance(wheelRad, 2), false);
-      
-      if(i == 3) {
-        System.out.println("doing localization");
-        //localization at the second localization point
-        
-         turnTo(0);
-         lightLocalizer.startLocalize((int)destinations[0][0]*TILE_SIZE,
-         (int)destinations[0][1]*TILE_SIZE, 0);
-        // System.out.println(odo.getXYT()[0]+" "+ odo.getXYT()[1]+" "+odo.getXYT()[2]);
-      }
+ // travel to the first correction point
+    while (!checkIfDone(destinations[2][0], destinations[2][1])) {
+      travelTo(destinations[2][0], destinations[2][1], xFirst);
     }
-    //reach the entry of the tunnel
+
+
+    //do correction at the first correction point
+    System.out.println("doing correction");
+    turnTo(correctionAngles[2]);
+    odometryCorrection.setSpeeds(75, 75);
+    odometryCorrection.moveForward();
+    odometryCorrection.correct(correctionAngles[2]);
+    double forwardDistance = TILE_SIZE / 2 - odometryCorrection.DISTANCE_TO_SENSOR;
+    leftMotor.rotate(convertDistance(wheelRad, forwardDistance), true);
+    rightMotor.rotate(convertDistance(wheelRad, forwardDistance), false);
     
-    //travel to (0,0)
-    while (!checkIfDone(0, 0)) {
-      travelTo(0, 0, true);
+    turnTo(correctionAngles[3]);
+    odometryCorrection.setSpeeds(75, 75);
+    odometryCorrection.moveForward();
+    odometryCorrection.correct(correctionAngles[3]);
+    leftMotor.rotate(convertDistance(wheelRad,
+        3 * TILE_SIZE + (TILE_SIZE - odometryCorrection.DISTANCE_TO_SENSOR)), true);
+    rightMotor.rotate(convertDistance(wheelRad,
+        3 * TILE_SIZE + (TILE_SIZE - odometryCorrection.DISTANCE_TO_SENSOR)), false);
+    //exit the tunnel
+
+    // travel to (0,0)
+    while (!checkIfDone(WiFi.localizeX, WiFi.localizeY)) {
+      travelTo(WiFi.localizeX, WiFi.localizeY, true);
     }
     leftMotor.rotate(convertDistance(wheelRad, 2), true);
     rightMotor.rotate(convertDistance(wheelRad, 2), false);
-    
+
     releaseCan();
-   Sound.beep();
-   Sound.beep();
-   Sound.beep();
-   Sound.beep();
-   Sound.beep();
+    Sound.beep();
+    Sound.beep();
+    Sound.beep();
+    Sound.beep();
+    Sound.beep();
   }
+  
+  public void initializeWayPointsAndAngle() {
+    int navigationCase = -1;
+
+    int localizeTheta = 0;
+    if (TN_LL_Y + 2 == TN_UR_Y && TN_LL_X + 1 == TN_UR_X) { // how to handle 1 square tile??
+      if (corner == 2 || corner == 3) {
+        // case 1
+        navigationCase = 1;
+        if (corner == 2) {
+          destinations[0][0] = TN_LL_X;
+          destinations[0][1] = TN_UR_Y + 1;
+          destinations[1][0] = TN_LL_X;
+          destinations[1][1] = TN_LL_Y - 1;
+          correctionAngles[0] = 90;
+          correctionAngles[1] = 180;
+          correctionAngles[2] = 90;
+          correctionAngles[3] = 0;
+        }
+        if (corner == 3) {
+          destinations[0][0] = TN_UR_X;
+          destinations[0][1] = TN_UR_Y + 1;
+          destinations[1][0] = TN_UR_X;
+          destinations[1][1] = TN_LL_Y - 1;
+          correctionAngles[0] = 270;
+          correctionAngles[1] = 180;
+          correctionAngles[2] = 270;
+          correctionAngles[3] = 0;
+        }
+      } else if (corner == 1 || corner == 0) {
+        // case 4
+        navigationCase = 4;
+        if (corner == 0) {
+          destinations[0][0] = TN_UR_X;
+          destinations[0][1] = TN_LL_Y - 1;
+          destinations[1][0] = TN_UR_X;
+          destinations[1][1] = TN_UR_Y + 1;
+          correctionAngles[0] = 270;
+          correctionAngles[1] = 0;
+          correctionAngles[2] = 270;
+          correctionAngles[3] = 180;
+        }
+        if (corner == 1) {
+          destinations[0][0] = TN_LL_X;
+          destinations[0][1] = TN_LL_Y - 1;
+          destinations[1][0] = TN_LL_X;
+          destinations[1][1] = TN_UR_Y + 1;
+          correctionAngles[0] = 90;
+          correctionAngles[1] = 0;
+          correctionAngles[2] = 90;
+          correctionAngles[3] = 180;
+        }
+
+      }
+    } else if (TN_LL_Y + 1 == TN_UR_Y && TN_LL_X + 2 == TN_UR_X) {
+
+      if (corner == 1 || corner == 2) {
+        // case 2
+        navigationCase = 2;
+        if (corner == 1) {
+          destinations[0][0] = TN_UR_X +1;
+          destinations[0][1] = TN_UR_Y;
+          destinations[1][0] = TN_LL_X-1;
+          destinations[1][1] = TN_UR_Y;
+          correctionAngles[0] = 180;
+          correctionAngles[1] = 270;
+          correctionAngles[2] = 180;
+          correctionAngles[3] = 90;
+        }
+        if (corner == 2) {
+          destinations[0][0] = TN_UR_X +1;
+          destinations[0][1] = TN_LL_Y;
+          destinations[1][0] = TN_LL_X-1;
+          destinations[1][1] = TN_LL_Y;
+          correctionAngles[0] = 0;
+          correctionAngles[1] = 270;
+          correctionAngles[2] = 0;
+          correctionAngles[3] = 90;
+        }
+      } else if (corner == 0 || corner == 3) {
+        // case 3
+        navigationCase = 3;
+        if (corner == 0) {
+          destinations[0][0] = TN_LL_X-1;
+          destinations[0][1] = TN_UR_Y;
+          destinations[1][0] = TN_UR_X+1;
+          destinations[1][1] = TN_UR_Y;
+          correctionAngles[0] = 180;
+          correctionAngles[1] = 90;
+          correctionAngles[2] = 180;
+          correctionAngles[3] = 270;
+        }
+        if (corner == 3) {
+          destinations[0][0] = TN_LL_X-1;
+          destinations[0][1] = TN_LL_Y;
+          destinations[1][0] = TN_UR_X+1;
+          destinations[1][1] = TN_LL_Y;
+          correctionAngles[0] = 0;
+          correctionAngles[1] = 90;
+          correctionAngles[2] = 0;
+          correctionAngles[3] = 270;
+        }
+      }
+    }
+
+    destinations[2][0] = SZ_LL_X;
+    destinations[2][1] = SZ_LL_Y;
+
+
+    if (navigationCase == 3 || navigationCase == 2) {
+      xFirst = false;
+    }
+
+    System.out.println(
+        "corner" + corner + "travelling to" + destinations[0][0] + " " + destinations[0][1]);
+
+  }
+  
 
 }
-
