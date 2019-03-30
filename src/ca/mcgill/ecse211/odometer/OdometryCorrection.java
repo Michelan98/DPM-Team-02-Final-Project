@@ -67,6 +67,7 @@ public class OdometryCorrection {
 
 //    travelDistance(-7, 150);
 
+    setSpeeds(75,75);
 
     boolean rightLineDetected = false;
     boolean leftLineDetected = false;
@@ -77,9 +78,11 @@ public class OdometryCorrection {
       if (rightLightSensor.lineDetected()) {
         rightLineDetected = true;
         // Stop the right motor
+        stopMoving(false, true);
 
       } else if (leftLightSensor.lineDetected()) {
         leftLineDetected = true;
+        stopMoving(true, false);
 
         // Stop the left motor
       }
@@ -96,8 +99,10 @@ public class OdometryCorrection {
       // If the other line detected, stop the motors
       if (rightLineDetected && leftLightSensor.lineDetected()) {
         leftLineDetected = true;
+        stopMotors();
       } else if (leftLineDetected && rightLightSensor.lineDetected()) {
         rightLineDetected = true;
+        stopMotors();
       }
     }
     
