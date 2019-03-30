@@ -14,6 +14,7 @@ import ca.mcgill.ecse211.entryPoint.*;
  */
 
 public class OdometryCorrection {
+
 	// Constants
 	private static final int FORWARD_SPEED = 150;
 	private static final int ROTATE_SPEED = 80;

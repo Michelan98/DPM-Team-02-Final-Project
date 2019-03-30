@@ -2,6 +2,7 @@ package ca.mcgill.ecse211.WiFi;
 
 import java.util.Map;
 import ca.mcgill.ecse211.WiFiClient.WifiConnection;
+import ca.mcgill.ecse211.entryPoint.Lab5;
 
 /**
  * This class allows to get the WiFi data from the TA's server when he presses Start in the GUI.
@@ -21,7 +22,7 @@ public class WiFi {
 
   // declaring constants for platform Cartesian dimensions
 
-  public static final int GRID_X = 9;
+  public static final int GRID_X = 15;
   public static final int GRID_Y = 9;
 
   // Team numbers
@@ -55,11 +56,13 @@ public class WiFi {
   public static int target_color = 0;
 
   // variables for coordinates
-  public static int corner, localizeX, localizeY, localizeTheta, LL_x, LL_y, UR_x, UR_y, TunLL_x,
-      TunLL_y, TunUR_x, TunUR_y, SZ_LL_x, SZ_LL_y, SZ_UR_x, SZ_UR_y;
+  public static int corner, LL_x, LL_y, UR_x, UR_y, TunLL_x, TunLL_y, TunUR_x, TunUR_y, SZ_LL_x,
+      SZ_LL_y, SZ_UR_x, SZ_UR_y, localizeX, localizeY, localizeTheta;
+
 
   public static int opp_corner, opp_localizeX, opp_localizeY, opp_LL_x, opp_LL_y, opp_UR_x,
-      opp_UR_y, opp_TunLL_x, opp_TunLL_y, opp_TunUR_x, opp_TunUR_y, opp_SZ_LL_x, opp_SZ_LL_y, opp_SZ_UR_x, opp_SZ_UR_y;
+      opp_UR_y, opp_TunLL_x, opp_TunLL_y, opp_TunUR_x, opp_TunUR_y, opp_SZ_LL_x, opp_SZ_LL_y,
+      opp_SZ_UR_x, opp_SZ_UR_y;
 
   @SuppressWarnings("rawtypes")
   public static void getData() {
@@ -191,7 +194,7 @@ public class WiFi {
       opp_SZ_LL_y = SZG_LL_y;
       opp_SZ_UR_x = SZG_UR_x;
       opp_SZ_UR_y = SZG_UR_y;
-      
+
     } else if (color == 1) // GREEN
     {
       corner = greenCorner;
@@ -235,21 +238,22 @@ public class WiFi {
    * @param area 0, 1, 2, or 3
    */
   private static void setStartingCoordinates(int area) {
+    // TODO: fix it!!!
     if (area == 0) {
-      localizeX = 0;
-      localizeY = 0;
+      localizeX = 1;
+      localizeY = 1;
       localizeTheta = 0;
 
     } else if (area == 1) {
       localizeX = GRID_X - 1;
-      localizeY = 0;
+      localizeY = 1;
       localizeTheta = 0;
     } else if (area == 2) {
-      localizeX = GRID_X - 1;
-      localizeY = GRID_Y - 1;
+      localizeX = GRID_X - 1; // GRID_X - 1
+      localizeY = GRID_Y - 1; // GRID_Y - 1
       localizeTheta = 180;
     } else if (area == 3) {
-      localizeX = 0;
+      localizeX = 1;
       localizeY = GRID_Y - 1;
       localizeTheta = 180;
     } else {
