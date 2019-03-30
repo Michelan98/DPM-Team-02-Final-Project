@@ -100,14 +100,17 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   // correction angle: 0: first correction angle, 1: second correction angle, ...
 
 
+
   CanGrabbing canGrabbing = null;
   boolean terminateStateMachine = false;
 
   public NavigationWithObstacle(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,
       double track, double wheelRad, int TN_LL_X, int TN_LL_Y, int TN_UR_X, int TN_UR_Y, int LLX,
       int LLY, int URX, int URY, int cornerNum, EV3LargeRegulatedMotor sensorMotor, TextLCD lcd,
+
       int TR, SampleProvider sampleProvider, OdometryCorrection odometryCorrection,
       LightLocalizer lightLocalizer) throws OdometerExceptions {
+
 
     odo = Odometer.getOdometer();
     this.leftMotor = leftMotor;
@@ -156,6 +159,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
     this.lightLocalizer = lightLocalizer;
 
+
     canGrabbing = new CanGrabbing(Lab5.canGrabbingMotor);
   }
 
@@ -180,7 +184,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     currentDestination[1] = (SZ_LL_Y + SZ_UR_Y) / 2;
 
 
-    state = State.INIT;
+     state = State.INIT;
 
     while (true) {
 
@@ -229,7 +233,6 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
         }
         case GRABBINGCAN: {
           startCanGrabbing();
-          // state = State.LEAVING;
 
           terminateStateMachine = true;
           break;
@@ -275,6 +278,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
         } else if (distanceX > 0 && Math.abs(theta - 90) > thetaAccuracy) {
           turnTo(90);
         }
+
 
         leftMotor.forward();
         rightMotor.forward();
@@ -325,6 +329,42 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
         leftMotor.forward();
         rightMotor.forward();
       }
+    }
+    }
+    else {
+      if (Math.abs(distanceY) > navigationAccuracy) {
+
+        
+        if (distanceY < 0 && Math.abs(theta - 180) > thetaAccuracy) {
+          turnTo(180);
+        } else if (distanceY > 0) {
+          if (theta > 180 && Math.abs(theta - 360) > thetaAccuracy) {
+            turnTo(0);
+          } else if (theta < 180 && Math.abs(theta - 0) > thetaAccuracy) {
+            turnTo(0);
+          }
+        }
+
+          leftMotor.forward();
+          rightMotor.forward();
+
+
+      } else {
+        // x is done
+        if (!offsetAdded) {
+           leftMotor.rotate(convertDistance(wheelRad, distanceX), true);
+           rightMotor.rotate(convertDistance(wheelRad, distanceX), false);
+          offsetAdded = true;
+        }
+        if (distanceX < 0 && Math.abs(theta - 270) > thetaAccuracy) {
+          turnTo(270);
+        } else if (distanceX > 0 && Math.abs(theta - 90) > thetaAccuracy) {
+          turnTo(90);
+        }
+
+        leftMotor.forward();
+        rightMotor.forward();
+    }
     }
 
 
@@ -563,6 +603,10 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     canGrabbing.releaseCan();
   }
 
+  public void releaseCan() {
+    canGrabbing.releaseCan();
+  }
+
 
   /**
    * This method checks whether the robot has reached the current destination.
@@ -782,6 +826,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   
   public void initializeWayPointsAndAngle() {
     int navigationCase = -1;
+
     int localizeTheta = 0;
     if (TN_LL_Y + 2 == TN_UR_Y && TN_LL_X + 1 == TN_UR_X) { // how to handle 1 square tile??
       if (corner == 2 || corner == 3) {
@@ -830,6 +875,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           correctionAngles[2] = 90;
           correctionAngles[3] = 180;
         }
+
       }
     } else if (TN_LL_Y + 1 == TN_UR_Y && TN_LL_X + 2 == TN_UR_X) {
 
@@ -892,6 +938,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
     System.out.println(
         "corner" + corner + "travelling to" + destinations[0][0] + " " + destinations[0][1]);
+
   }
   
 

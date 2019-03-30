@@ -44,7 +44,7 @@ public class Lab5 {
   public static EV3LargeRegulatedMotor rightMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
 
-  private static Port sensorPort = LocalEV3.get().getPort("S1");
+  private static Port sensorPort = LocalEV3.get().getPort("S4");
   private static SensorModes us = new EV3UltrasonicSensor(sensorPort);
   private static SampleProvider sampleProvider = us.getMode("Distance");
 
@@ -69,11 +69,20 @@ public class Lab5 {
 
   public static double TRACK = 11.99;
   public static double WHEEL_RAD = 2.06;
+  // Time limit for Final demo is 300 seconds (5 min)
+  public static final long TIME_LIMIT = 300;
+  // time threshold for going back to the starting point
+  private static final float END_TIME = 45f;
 
   public static int TURNING_SPEED = 70;
   public static final int FORWARD_SPEED = 200;
   public static final double TILE_SIZE = 30.48;
 
+  // start time for the timer
+  private static long startTime;
+
+
+  //
   /*
    * Serves as Visual aid for now for calling Variable names
    * 
@@ -99,12 +108,8 @@ public class Lab5 {
    */
   public static void main(String str[]) {
 
-    WiFi.getData();
-    System.out.println(""+WiFi.corner+"llx"+WiFi.LL_x+" lly"+ WiFi.LL_y+" localizeX"+WiFi.localizeX+" localizeY"+WiFi.localizeY+ " localizetheta"+ WiFi.localizeTheta+ " tnllx"+WiFi.TunLL_x+" tnlly"+WiFi.TunLL_y+ " tnurx"+WiFi.TunUR_x+ " tnury"+WiFi.TunUR_y+ " szllx"+WiFi.SZ_LL_x+ " szlly"+WiFi.SZ_LL_y+ " szurx"+WiFi.SZ_UR_x+" szury"+ WiFi.SZ_UR_y);
-
-
-
     Odometer odometer = null;
+    NavigationWithObstacle navigation = null;
     try {
       odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD);
       Thread odoThread = new Thread(odometer);
@@ -113,24 +118,40 @@ public class Lab5 {
       // TODO Auto-generated catch block
       e1.printStackTrace();
     }
-
-    // initialize OdometryCorrection
     final OdometryCorrection odometryCorrection =
         new OdometryCorrection(odometer, leftMotor, rightMotor, leftLightSensor, rightLightSensor);
-
-
-//     initialize and start localization
-     try {
-     UltrasonicLocalizer usLocalizer = new UltrasonicLocalizer(sampleProvider);
-     usLocalizer.fallingEdge();
-     } catch (OdometerExceptions e) {
-     e.printStackTrace();
-     }
-
-    // TODO: change the localize value based on the data from wifi!!!
     LightLocalizer lightLocalizer =
         new LightLocalizer(odometer, leftLightSensor, rightLightSensor, odometryCorrection);
-//    lightLocalizer.startLocalize(0, 0, 0);
+
+
+
+    WiFi.getData();
+    System.out.println("" + WiFi.corner + "llx" + WiFi.LL_x + " lly" + WiFi.LL_y + " localizeX"
+        + WiFi.localizeX + " localizeY" + WiFi.localizeY + " localizetheta" + WiFi.localizeTheta
+        + " tnllx" + WiFi.TunLL_x + " tnlly" + WiFi.TunLL_y + " tnurx" + WiFi.TunUR_x + " tnury"
+        + WiFi.TunUR_y + " szllx" + WiFi.SZ_LL_x + " szlly" + WiFi.SZ_LL_y + " szurx" + WiFi.SZ_UR_x
+        + " szury" + WiFi.SZ_UR_y);
+
+    // get the startTime at the beginning
+    startTime = System.currentTimeMillis();
+
+
+
+    // initialize OdometryCorrection
+
+
+
+    // initialize and start localization
+    // try {
+    // UltrasonicLocalizer usLocalizer = new UltrasonicLocalizer(sampleProvider);
+    // usLocalizer.fallingEdge();
+    // } catch (OdometerExceptions e) {
+    // e.printStackTrace();
+    // }
+
+
+
+    // lightLocalizer.startLocalize(0, 0, 0);
 
 
 
@@ -169,21 +190,23 @@ public class Lab5 {
 
 
     // beta demo with wifi
-    lightLocalizer.startLocalize(WiFi.localizeX, WiFi.localizeY,WiFi.localizeTheta);
+    lightLocalizer.startLocalize(WiFi.localizeX*TILE_SIZE, WiFi.localizeY*TILE_SIZE, (int) WiFi.localizeTheta);
     try {
-      NavigationWithObstacle navigation =
-          new NavigationWithObstacle(leftMotor, rightMotor, TRACK, WHEEL_RAD, WiFi.TunLL_x,
-              WiFi.TunLL_y, WiFi.TunUR_x, WiFi.TunUR_y, WiFi.SZ_LL_x, WiFi.SZ_LL_y, WiFi.SZ_UR_x, WiFi.SZ_UR_y,
-              WiFi.corner, sensorMotor, lcd, 1, sampleProvider, odometryCorrection);
-//      Sound.beep();
-
-      navigation.navigateToSearchingArea();
-      Thread navigationThread = new Thread(navigation);
-      navigationThread.start();
+      navigation = new NavigationWithObstacle(leftMotor, rightMotor, TRACK, WHEEL_RAD, WiFi.TunLL_x,
+          WiFi.TunLL_y, WiFi.TunUR_x, WiFi.TunUR_y, WiFi.SZ_LL_x, WiFi.SZ_LL_y, WiFi.SZ_UR_x,
+          WiFi.SZ_UR_y, WiFi.corner, sensorMotor, lcd, 1, sampleProvider, odometryCorrection,
+          lightLocalizer);
     } catch (OdometerExceptions e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
+    navigation.navigateToSearchingArea();
+    Thread navigationThread = new Thread(navigation);
+    navigationThread.start();
+    navigation.leaveSearchingArea();
+
+
+  }
+
 
     navigation.initializeWayPointsAndAngle();
     navigation.navigateToSearchingArea();
@@ -191,8 +214,10 @@ public class Lab5 {
     navigationThread.start();
     while(navigationThread.isAlive()) {}
     navigation.leaveSearchingArea();
+}
 
-
+  private float getTimeRemaining() {
+    return TIME_LIMIT - ((System.currentTimeMillis() - startTime) / 1000f);
   }
 
 }

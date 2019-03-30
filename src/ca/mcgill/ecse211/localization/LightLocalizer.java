@@ -22,111 +22,119 @@ import ca.mcgill.ecse211.controller.*;
 
 public class LightLocalizer {
 
-  // Constants
-  private static final double WHEEL_RADIUS = 2.1;
-  private static int FORWARD_SPEED = Lab5.FORWARD_SPEED;
-  private static int TURNING_SPEED = Lab5.TURNING_SPEED;
-  private final double TILE_SIZE = Lab5.TILE_SIZE;
-  private final double DISTANCE_TO_SENSOR = OdometryCorrection.DISTANCE_TO_SENSOR;
+	// Constants
+	private static final double WHEEL_RADIUS = 2.1;
+	private static int FORWARD_SPEED = Lab5.FORWARD_SPEED;
+	private static int TURNING_SPEED = Lab5.TURNING_SPEED;
+	private final double TILE_SIZE = Lab5.TILE_SIZE;
+	private final double DISTANCE_TO_SENSOR = OdometryCorrection.DISTANCE_TO_SENSOR;
 
-  private Odometer odometer;
+	private Odometer odometer;
 
-  private OdometryCorrection odometerCorrection;
+	private OdometryCorrection odometerCorrection;
 
-  // declaring lightSensorController objects
-  private static LightSensorController leftLightSensor;
-  private static LightSensorController rightLightSensor;
+	// declaring lightSensorController objects
+	private static LightSensorController leftLightSensor;
+	private static LightSensorController rightLightSensor;
 
-  private double color = 0.2;
+	//private double color = 0.2;
 
-  /**
-   * Constructor for the LightLocalizer class
-   * 
-   * @param odometer
-   * @param leftLightSensor
-   * @param rightLightSensor
-   */
-  public LightLocalizer(Odometer odometer, LightSensorController leftLightSensor,
-      LightSensorController rightLightSensor, OdometryCorrection odometerCorrection) {
-    this.odometer = odometer;
-    this.odometerCorrection = odometerCorrection;
-    this.FORWARD_SPEED = FORWARD_SPEED;
-    this.TURNING_SPEED = TURNING_SPEED;
-    this.leftLightSensor = leftLightSensor;
-    this.rightLightSensor = rightLightSensor;
+	/**
+	 * Constructor for the LightLocalizer class
+	 * 
+	 * @param odometer
+	 * @param leftLightSensor
+	 * @param rightLightSensor
+	 */
+	public LightLocalizer(Odometer odometer, LightSensorController leftLightSensor,
+			LightSensorController rightLightSensor, OdometryCorrection odometerCorrection) {
+		this.odometer = odometer;
+		this.odometerCorrection = odometerCorrection;
+		this.FORWARD_SPEED = FORWARD_SPEED;
+		this.TURNING_SPEED = TURNING_SPEED;
+		this.leftLightSensor = leftLightSensor;
+		this.rightLightSensor = rightLightSensor;
 
-  }
+	}
 
-  public void startLocalize(double x, double y, int theta) {
-    
-    // start moving forward
-    odometerCorrection.setSpeeds(75, 75);
+	public void startLocalize(double x, double y, int theta) {
 
-    odometerCorrection.moveForward();
+		// start moving forward
+		odometerCorrection.setSpeeds(220, 220);
 
-    // correcting with the light sensors on the grid lines
-    correct();
+		odometerCorrection.moveForward();
+		
+		// recalibrate the robot before correcting on the grid line
+		odometerCorrection.slowDown();	
+		
+		odometerCorrection.moveForward();
+		
+		// correct on grid lines
+		correct();
+		
+		odometerCorrection.travelDistance(-DISTANCE_TO_SENSOR, 200);
+		
+		// turning clockwise for direction = true
+		odometerCorrection.setSpeeds(220, 220);
+		odometerCorrection.turnBy(90, true);
 
-    odometerCorrection.travelDistance(-DISTANCE_TO_SENSOR, 150);
+		odometerCorrection.moveForward();
+		
+		odometerCorrection.slowDown();	
+		
+		odometerCorrection.moveForward();
 
-    // turning clockwise for direction = true
-    odometerCorrection.setSpeeds(75, 75);
-    odometerCorrection.turnBy(90, true);
+		correct();
 
-    odometerCorrection.setSpeeds(75, 75);
-    odometerCorrection.moveForward();
+		odometerCorrection.travelDistance(-DISTANCE_TO_SENSOR, 200);
+		odometerCorrection.setSpeeds(200, 200);
+		odometerCorrection.turnBy(-90, true);
 
-    correct();
+		// beeps three times when parallel to wall
+		odometer.setXYT(x, y, theta);
+		System.out.println(odometer.getXYT()[0]+" "+ odometer.getXYT()[1]+" "+odometer.getXYT()[2]);
+		Sound.beep();
+		Sound.beep();
+		Sound.beep();
 
-    odometerCorrection.travelDistance(-DISTANCE_TO_SENSOR, 150);
-    odometerCorrection.setSpeeds(75, 75);
-    odometerCorrection.turnBy(-90, true);
+	}
 
-    // beeps three times when parallel to wall
-    odometer.setXYT(x, y, theta);
-    System.out.println(odometer.getXYT()[0]+" "+ odometer.getXYT()[1]+" "+odometer.getXYT()[2]);
-    Sound.beep();
-    Sound.beep();
-    Sound.beep();
+	/**
+	 * This method serves to correct the orientation of the robot with line detection
+	 */
+	private void correct() {
 
-  }
+		boolean rightLineDetected = false;
+		boolean leftLineDetected = false;
 
-  /**
-   * This method serves to correct the orientation of the robot with line detection
-   */
-  private void correct() {
+		// Move the robot until one of the sensors detects a line
+		while (!leftLineDetected && !rightLineDetected) {
+			if (rightLightSensor.lineDetected()) {
+				rightLineDetected = true;
+				// Stop the right motor
+				odometerCorrection.stopMoving(false, true);
 
-    boolean rightLineDetected = false;
-    boolean leftLineDetected = false;
+			} else if (leftLightSensor.lineDetected()) {
+				leftLineDetected = true;
 
-    // Move the robot until one of the sensors detects a line
-    while (!leftLineDetected && !rightLineDetected) {
-      if (rightLightSensor.fetch() < color) {
-        rightLineDetected = true;
-        // Stop the right motor
-        odometerCorrection.stopMoving(false, true);
+				// Stop the left motor
+				odometerCorrection.stopMoving(true, false);
+			}
+		}
 
-      } else if (leftLightSensor.fetch() < color) {
-        leftLineDetected = true;
+		// Keep moving the left/right motor until both lines have been detected
+		while ((!leftLineDetected || !rightLineDetected)) {
+			// If the other line detected, stop the motors
+			if (rightLineDetected && leftLightSensor.lineDetected()) {
+				leftLineDetected = true;
+				odometerCorrection.stopMotors();
 
-        // Stop the left motor
-        odometerCorrection.stopMoving(true, false);
-      }
-    }
+			} else if (leftLineDetected && rightLightSensor.lineDetected()) {
+				rightLineDetected = true;
+				odometerCorrection.stopMotors();
+			}
+		}
 
-    // Keep moving the left/right motor until both lines have been detected
-    while ((!leftLineDetected || !rightLineDetected)) {
-      // If the other line detected, stop the motors
-      if (rightLineDetected && leftLightSensor.fetch() < color) {
-        leftLineDetected = true;
-        odometerCorrection.stopMotors();
-
-      } else if (leftLineDetected && rightLightSensor.fetch() < color) {
-        rightLineDetected = true;
-        odometerCorrection.stopMotors();
-      }
-    }
-
-  }
+	}
 
 }
