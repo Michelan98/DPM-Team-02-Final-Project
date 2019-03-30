@@ -185,6 +185,14 @@ public class Lab5 {
       e.printStackTrace();
     }
 
+    navigation.initializeWayPointsAndAngle();
+    navigation.navigateToSearchingArea();
+    Thread navigationThread = new Thread(navigation);
+    navigationThread.start();
+    while(navigationThread.isAlive()) {}
+    navigation.leaveSearchingArea();
+
+
   }
 
 }
