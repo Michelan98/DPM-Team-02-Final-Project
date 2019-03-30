@@ -401,8 +401,8 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
       } else {
         // x is done
         if (!offsetAdded) {
-           leftMotor.rotate(convertDistance(wheelRad, distanceX), true);
-           rightMotor.rotate(convertDistance(wheelRad, distanceX), false);
+           leftMotor.rotate(convertDistance(wheelRad, distanceY), true);
+           rightMotor.rotate(convertDistance(wheelRad, distanceY), false);
           offsetAdded = true;
         }
         if (distanceX < 0 && Math.abs(theta - 270) > thetaAccuracy) {
@@ -809,18 +809,38 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     if(c == 3 || c ==2) {
       xFirst = false;
     }
+    
+    System.out.println("corner"+ corner +"travelling to"+destinations[0][0]+" "+ destinations[0][1]);
 
     // TODO: localize before passing the tunnel
      while (!checkIfDone(destinations[0][0], destinations[0][1])) {
      travelTo(destinations[0][0], destinations[0][1], xFirst);
      }
-     turnTo(0);
-     lightLocalizer.startLocalize((int)destinations[0][0]*TILE_SIZE,
-     (int)destinations[0][1]*TILE_SIZE, 0);
-    // System.out.println(odo.getXYT()[0]+" "+ odo.getXYT()[1]+" "+odo.getXYT()[2]);
-    System.out.println("doing localization");
-
-    for (int i = 1; i < 5; i++) {
+//     turnTo(0);
+//     lightLocalizer.startLocalize((int)destinations[0][0]*TILE_SIZE,
+//     (int)destinations[0][1]*TILE_SIZE, 0);
+//    // System.out.println(odo.getXYT()[0]+" "+ odo.getXYT()[1]+" "+odo.getXYT()[2]);
+//    System.out.println("doing localization");
+     
+     //do correction
+//     double currentTheta = odo.getXYT()[2];
+//     if(currentTheta)
+     System.out.println("doing correction");
+     turnTo(180);
+     odometryCorrection.setSpeeds(75, 75);
+     odometryCorrection.moveForward();
+     odometryCorrection.correct(180);
+     double forwardDistance = TILE_SIZE/2 - odometryCorrection.DISTANCE_TO_SENSOR;
+     leftMotor.rotate(convertDistance(wheelRad, forwardDistance), true);
+     rightMotor.rotate(convertDistance(wheelRad, forwardDistance), false);
+     turnTo(270);
+     odometryCorrection.setSpeeds(75, 75);
+     odometryCorrection.moveForward();
+     odometryCorrection.correct(270);
+     leftMotor.rotate(convertDistance(wheelRad, 3*TILE_SIZE + (TILE_SIZE - odometryCorrection.DISTANCE_TO_SENSOR)), true);
+     rightMotor.rotate(convertDistance(wheelRad, 3*TILE_SIZE + (TILE_SIZE - odometryCorrection.DISTANCE_TO_SENSOR)), false);
+     
+    for (int i = 3; i < 5; i++) {
 
       if(i != 3) {
         System.out.println("navigating to the tunnel");
@@ -889,6 +909,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
    Sound.beep();
    Sound.beep();
   }
+  
 
 }
 
