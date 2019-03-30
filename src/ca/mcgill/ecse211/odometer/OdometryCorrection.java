@@ -19,7 +19,7 @@ public class OdometryCorrection {
   private static final int ROTATE_SPEED = 80;
   private static final double TILE_SIZE = 30.48;
   public static final double DISTANCE_TO_SENSOR = 11.3;
-  private static final double THRESHOLD = LightSensorController.THRESHOLD;
+  //private static final double THRESHOLD = LightSensorController.THRESHOLD;
 
   // Left and right light sensors
   private LightSensorController leftLightSensor;
@@ -67,6 +67,7 @@ public class OdometryCorrection {
 
 //    travelDistance(-7, 150);
 
+    setSpeeds(75,75);
 
     boolean rightLineDetected = false;
     boolean leftLineDetected = false;
@@ -74,12 +75,14 @@ public class OdometryCorrection {
     while (!leftLineDetected && !rightLineDetected) {
       // double rightSample = rightLS.fetch();
       // double leftSample = leftLS.fetch();
-      if (rightLightSensor.fetch() < THRESHOLD) {
+      if (rightLightSensor.lineDetected()) {
         rightLineDetected = true;
         // Stop the right motor
+        stopMoving(false, true);
 
-      } else if (leftLightSensor.fetch() < THRESHOLD) {
+      } else if (leftLightSensor.lineDetected()) {
         leftLineDetected = true;
+        stopMoving(true, false);
 
         // Stop the left motor
       }
@@ -94,10 +97,12 @@ public class OdometryCorrection {
     // Keep moving the left/right motor until both lines have been detected
     while ((!leftLineDetected || !rightLineDetected)) {
       // If the other line detected, stop the motors
-      if (rightLineDetected && leftLightSensor.fetch() < THRESHOLD) {
+      if (rightLineDetected && leftLightSensor.lineDetected()) {
         leftLineDetected = true;
-      } else if (leftLineDetected && rightLightSensor.fetch() < THRESHOLD) {
+        stopMotors();
+      } else if (leftLineDetected && rightLightSensor.lineDetected()) {
         rightLineDetected = true;
+        stopMotors();
       }
     }
     
@@ -123,11 +128,11 @@ public class OdometryCorrection {
     while (!leftLineDetected && !rightLineDetected) {
       // double rightSample = rightLS.fetch();
       // double leftSample = leftLS.fetch();
-      if (rightLightSensor.fetch() < THRESHOLD) {
+      if (rightLightSensor.lineDetected()) {
         rightLineDetected = true;
         // Stop the right motor
 
-      } else if (leftLightSensor.fetch() < THRESHOLD) {
+      } else if (leftLightSensor.lineDetected()) {
         leftLineDetected = true;
 
         // Stop the left motor
