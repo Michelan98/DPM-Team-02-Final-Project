@@ -65,8 +65,16 @@ public class OdometryCorrection {
 	 */
 	public void correct(double thetaCorrection) {
 
-		//    travelDistance(-7, 150);
-
+		setSpeeds(220, 220);
+		
+		// start moving forward
+		moveForward();
+		
+		// recalibrate
+		slowDown();	
+		
+		// move forward again
+		moveForward();
 
 		boolean rightLineDetected = false;
 		boolean leftLineDetected = false;
@@ -335,8 +343,8 @@ public class OdometryCorrection {
 	 * 
 	 */
 	public void stopMotors() {
-		leftMotor.stop();
-		rightMotor.stop();
+		leftMotor.stop(true);
+		rightMotor.stop(false);
 
 	}
 
@@ -382,10 +390,11 @@ public class OdometryCorrection {
 			moveForward();
 			
 			if (leftLightSensor.lineDetected() || rightLightSensor.lineDetected()) {
+				stopMotors();
 				// travel back a bit from grid line
-				travelDistance(-3, 150);
+				travelDistance(-3, 200);
 				// set speed to approach grid line slower
-				setSpeeds(75, 75);
+				setSpeeds(85, 85);
 				break;
 			}	
 		}

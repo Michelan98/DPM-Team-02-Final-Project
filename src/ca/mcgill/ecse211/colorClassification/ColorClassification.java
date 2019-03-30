@@ -23,7 +23,7 @@ import lejos.utility.TimerListener;
  */
 public class ColorClassification implements TimerListener {
 
-  private static Port colorPort = LocalEV3.get().getPort("S4");
+  private static Port colorPort = LocalEV3.get().getPort("S1");
   private static final SensorModes colorSensor = new EV3ColorSensor(colorPort);
   private static final SampleProvider colorSampleProvider = colorSensor.getMode("RGB");
   private float[] sample = new float[colorSampleProvider.sampleSize()];

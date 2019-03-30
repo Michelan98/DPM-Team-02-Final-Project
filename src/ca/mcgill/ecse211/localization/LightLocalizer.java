@@ -60,30 +60,34 @@ public class LightLocalizer {
 	public void startLocalize(double x, double y, int theta) {
 
 		// start moving forward
-		odometerCorrection.setSpeeds(150, 150);
+		odometerCorrection.setSpeeds(220, 220);
 
 		odometerCorrection.moveForward();
 		
 		// recalibrate the robot before correcting on the grid line
 		odometerCorrection.slowDown();	
-
+		
+		odometerCorrection.moveForward();
+		
 		// correct on grid lines
 		correct();
 		
-		odometerCorrection.travelDistance(-DISTANCE_TO_SENSOR, 150);
+		odometerCorrection.travelDistance(-DISTANCE_TO_SENSOR, 200);
 		
 		// turning clockwise for direction = true
-		odometerCorrection.setSpeeds(150, 150);
+		odometerCorrection.setSpeeds(220, 220);
 		odometerCorrection.turnBy(90, true);
 
 		odometerCorrection.moveForward();
 		
 		odometerCorrection.slowDown();	
+		
+		odometerCorrection.moveForward();
 
 		correct();
 
-		odometerCorrection.travelDistance(-DISTANCE_TO_SENSOR, 150);
-		odometerCorrection.setSpeeds(150, 150);
+		odometerCorrection.travelDistance(-DISTANCE_TO_SENSOR, 200);
+		odometerCorrection.setSpeeds(200, 200);
 		odometerCorrection.turnBy(-90, true);
 
 		// beeps three times when parallel to wall

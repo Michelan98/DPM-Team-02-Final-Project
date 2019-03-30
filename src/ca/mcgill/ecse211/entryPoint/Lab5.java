@@ -44,7 +44,7 @@ public class Lab5 {
 	public static EV3LargeRegulatedMotor rightMotor =
 			new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
 
-	private static Port sensorPort = LocalEV3.get().getPort("S1");
+	private static Port sensorPort = LocalEV3.get().getPort("S4");
 	private static SensorModes us = new EV3UltrasonicSensor(sensorPort);
 	private static SampleProvider sampleProvider = us.getMode("Distance");
 
