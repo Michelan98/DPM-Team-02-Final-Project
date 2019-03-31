@@ -91,7 +91,6 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   private LightLocalizer lightLocalizer;
 
   static double[][] destinations = {{0, 0}, {0, 0}, {0, 0}};
-//   double[][] destinations = {{0, 0}, {0, 0}, {0, 0}, {0,0}, {0,0}};
   double[] correctionAngles = {0, 0, 0, 0};
   boolean xFirst = true;
   // destinaiton: 0: correction point at the entry of the tunnel, 1: correction point at the exit of
@@ -680,12 +679,14 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   public void initializeWayPointsAndAngle() {
     int navigationCase = -1;
 
+    int halfOfX = Lab5.BOARD_X/2;
+    int halfOfY = Lab5.BOARD_Y/2;
     int localizeTheta = 0;
     if (TN_LL_Y + 2 == TN_UR_Y && TN_LL_X + 1 == TN_UR_X) { // how to handle 1 square tile??
       if (corner == 2 || corner == 3) {
         // case 1
         navigationCase = 1;
-        if (corner == 2) {
+        if (TN_LL_X > halfOfX) {
           destinations[0][0] = TN_LL_X;
           destinations[0][1] = TN_UR_Y + 1;
           destinations[1][0] = TN_LL_X;
@@ -695,7 +696,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           correctionAngles[2] = 90;
           correctionAngles[3] = 0;
         }
-        if (corner == 3) {
+        if (TN_LL_X <= halfOfX) {
           destinations[0][0] = TN_UR_X;
           destinations[0][1] = TN_UR_Y + 1;
           destinations[1][0] = TN_UR_X;
@@ -708,7 +709,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
       } else if (corner == 1 || corner == 0) {
         // case 4
         navigationCase = 4;
-        if (corner == 0) {
+        if (TN_LL_X <= halfOfX) {
           destinations[0][0] = TN_UR_X;
           destinations[0][1] = TN_LL_Y - 1;
           destinations[1][0] = TN_UR_X;
@@ -718,7 +719,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           correctionAngles[2] = 270;
           correctionAngles[3] = 180;
         }
-        if (corner == 1) {
+        if (TN_LL_X > halfOfX) {
           destinations[0][0] = TN_LL_X;
           destinations[0][1] = TN_LL_Y - 1;
           destinations[1][0] = TN_LL_X;
@@ -735,7 +736,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
       if (corner == 1 || corner == 2) {
         // case 2
         navigationCase = 2;
-        if (corner == 1) {
+        if (TN_LL_Y <= halfOfY) {
           destinations[0][0] = TN_UR_X +1;
           destinations[0][1] = TN_UR_Y;
           destinations[1][0] = TN_LL_X-1;
@@ -745,7 +746,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           correctionAngles[2] = 180;
           correctionAngles[3] = 90;
         }
-        if (corner == 2) {
+        if (TN_LL_Y > halfOfY) {
           destinations[0][0] = TN_UR_X +1;
           destinations[0][1] = TN_LL_Y;
           destinations[1][0] = TN_LL_X-1;
@@ -758,7 +759,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
       } else if (corner == 0 || corner == 3) {
         // case 3
         navigationCase = 3;
-        if (corner == 0) {
+        if (TN_LL_Y <halfOfY) {
           destinations[0][0] = TN_LL_X-1;
           destinations[0][1] = TN_UR_Y;
           destinations[1][0] = TN_UR_X+1;
@@ -768,7 +769,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           correctionAngles[2] = 180;
           correctionAngles[3] = 270;
         }
-        if (corner == 3) {
+        if (TN_LL_Y > halfOfY) {
           destinations[0][0] = TN_LL_X-1;
           destinations[0][1] = TN_LL_Y;
           destinations[1][0] = TN_UR_X+1;

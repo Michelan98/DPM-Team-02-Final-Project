@@ -77,6 +77,9 @@ public class Lab5 {
   public static int TURNING_SPEED = 70;
   public static final int FORWARD_SPEED = 200;
   public static final double TILE_SIZE = 30.48;
+  
+  public static final int BOARD_X = 15;
+  public static final int BOARD_Y = 9;
 
   // start time for the timer
   private static long startTime;
