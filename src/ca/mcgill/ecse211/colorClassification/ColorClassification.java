@@ -30,11 +30,6 @@ public class ColorClassification implements TimerListener {
 
   private static EV3LargeRegulatedMotor sensorMotor;
   private static TextLCD lcd;
-
-  // 4: red can, 2: green can, 3: yellow can, 1: blue can, 5:label
-//  private double canRGBNormalizedMeans[][] = {{0.927464231, 0.317823524, 0.130221225},
-//      {0.250897607, 0.943892592, 0.207426042}, {0.833111075, 0.526009994, 0.156434809},
-//      {0.298917037, 0.726693533, 0.612517117}, {0.711488185, 0.570923876, 0.377780294}};
   
   //1: blue, 2: green, 3: yellow, 4: red, 5: white
   private double canRGBNormalizedMeans[][] = {{0.298917037, 0.726693533, 0.612517117},{0.250897607, 0.943892592, 0.207426042},
@@ -45,11 +40,6 @@ public class ColorClassification implements TimerListener {
 
   // target color
   private static int TR = -1;
-
-  private static int count = 0;
-  private static ArrayList<Double> red = new ArrayList<Double>();
-  private static ArrayList<Double> green = new ArrayList<Double>();
-  private static ArrayList<Double> blue = new ArrayList<Double>();
 
 
   public ColorClassification(EV3LargeRegulatedMotor sensorMotor, TextLCD lcd, int TR) {
@@ -159,9 +149,10 @@ public class ColorClassification implements TimerListener {
         result = i;
       }
     }
-    if(result != -1) {
-      colorCount[result]++;
-    }
+    colorCount[result]++;
+//    if(result != -1) {
+//      
+//    }
 
   }
 

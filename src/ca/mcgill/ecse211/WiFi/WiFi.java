@@ -15,7 +15,7 @@ public class WiFi {
 
   // set at the beginning
 
-  private static final String SERVER_IP = "192.168.2.27"; // .8
+  private static final String SERVER_IP = "192.168.2.19"; // .8
 
   private static final int TEAM_NUMBER = 2;
 
@@ -240,7 +240,6 @@ public class WiFi {
    * @param area 0, 1, 2, or 3
    */
   private static void setStartingCoordinates(int area) {
-    // TODO: fix it!!!
     if (area == 0) {
       localizeX = 1;
       localizeY = 1;
@@ -249,7 +248,7 @@ public class WiFi {
     } else if (area == 1) {
       localizeX = GRID_X - 1;
       localizeY = 1;
-      localizeTheta = 0;
+      localizeTheta = 270;
     } else if (area == 2) {
       localizeX = GRID_X - 1; // GRID_X - 1
       localizeY = GRID_Y - 1; // GRID_Y - 1
@@ -257,7 +256,7 @@ public class WiFi {
     } else if (area == 3) {
       localizeX = 1;
       localizeY = GRID_Y - 1;
-      localizeTheta = 180;
+      localizeTheta = 90;
     } else {
       System.out.println("Error in specifying area");
     }
