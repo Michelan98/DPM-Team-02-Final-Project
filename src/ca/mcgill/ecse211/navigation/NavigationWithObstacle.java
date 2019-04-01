@@ -226,7 +226,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
               break;
             }
           }
-          
+
           System.out.println(oneSearchPoint);
           if (!oneSearchPoint) {
             // travel to the next search point
@@ -444,7 +444,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
         try {
           isTargetCan = colorClassification.colorClassify();
         } catch (InterruptedException e) {
-//           e.printStackTrace();
+          // e.printStackTrace();
         }
       }
     };
@@ -620,7 +620,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     // exit the tunnel
 
     // travel to ll_sz +1
-    System.out.println(destinations[0][0] + " " + destinations[0][1]);
+    System.out.println(destinations[2][0] + " " + destinations[2][1]);
     while (!checkIfDone(destinations[2][0], destinations[2][1])) {
       travelTo(destinations[2][0], destinations[2][1], xFirst);
     }
@@ -644,6 +644,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
    */
   public void leaveSearchingArea() {
     // travel to the first correction point
+    System.out.println("second localization point" + destinations[1][0] + "," + destinations[1][1]);
     while (!checkIfDone(destinations[1][0], destinations[1][1])) {
       travelTo(destinations[1][0], destinations[1][1], !xFirst);
     }
@@ -665,6 +666,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     // exit the tunnel
 
     // travel to starting point
+    System.out.println("starting point" + WiFi.localizeX + "," + WiFi.localizeY);
     while (!checkIfDone(WiFi.localizeX, WiFi.localizeY)) {
       travelTo(WiFi.localizeX, WiFi.localizeY, !xFirst);
     }
@@ -679,12 +681,16 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     Sound.beep();
   }
 
-  public void initializeWayPointsAndAngle() {
+  /**
+   * initialize key points in the path to the searching area and correction angle before and after
+   * passing the tunnel
+   */
+  public void initializePointsAndAngle() {
     int navigationCase = -1;
 
     int halfOfX = Lab5.BOARD_X / 2;
     int halfOfY = Lab5.BOARD_Y / 2;
-    System.out.println(halfOfX +" "+ halfOfY);
+    System.out.println(halfOfX + " " + halfOfY);
     if (TN_LL_Y + 2 == TN_UR_Y && TN_LL_X + 1 == TN_UR_X) { // how to handle 1 square tile??
       if (corner == 2 || corner == 3) {
         // case 1
@@ -860,8 +866,9 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
             * TILE_SIZE;
       }
     }
-    System.out.println("p1:" + searchPoint[0][0] + "," + searchPoint[0][1] + " p2:"
-        + searchPoint[1][0] + "," + searchPoint[1][1] + " boundary" + boundary + "oneSearchPoint"+oneSearchPoint);
+    System.out
+        .println("p1:" + searchPoint[0][0] + "," + searchPoint[0][1] + " p2:" + searchPoint[1][0]
+            + "," + searchPoint[1][1] + " boundary" + boundary + "oneSearchPoint" + oneSearchPoint);
 
   }
 

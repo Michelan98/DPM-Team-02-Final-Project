@@ -152,7 +152,7 @@ public class Lab5 {
     } catch (OdometerExceptions e) {
       e.printStackTrace();
     }
-    navigation.initializeWayPointsAndAngle();
+    navigation.initializePointsAndAngle();
     navigation.searchPointCalculation();
     navigation.navigateToSearchingArea();
     Thread navigationThread = new Thread(navigation);
