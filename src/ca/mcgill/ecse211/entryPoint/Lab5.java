@@ -57,15 +57,6 @@ public class Lab5 {
   private static final EV3ColorSensor leftLightMode = new EV3ColorSensor(leftLightPort);
   // private static SampleProvider leftLightSampleProvider = leftLightMode.getMode("Red");
 
-  // private static int LL_X = 2;
-  // private static int LL_Y = 2;
-  // private static int UR_X = 4;
-  // private static int UR_Y = 3;
-  // private static int corner = 0;
-  // private static int SZ_LL_X = 6;
-  // private static int SZ_LL_Y = 0;
-  // private static int SZ_UR_X = 14;
-  // private static int SZ_UR_Y = 5;
 
   public static double TRACK = 11.99;
   public static double WHEEL_RAD = 2.06;
@@ -159,7 +150,22 @@ public class Lab5 {
     navigationThread.start();
     while(navigationThread.isAlive()) {}
     navigation.leaveSearchingArea();
+    
+    //reach the starting point
+    navigation.turnTo((int) WiFi.localizeTheta);
+    lightLocalizer.startLocalize(WiFi.localizeX*TILE_SIZE, WiFi.localizeY*TILE_SIZE, (int) WiFi.localizeTheta);
 
+    //push the can to the starting tile
+    navigation.turnTo(((int) WiFi.localizeTheta + 180)%360);
+    leftMotor.rotate(720, true);
+    rightMotor.rotate(720, false);
+    navigation.releaseCan();
+    
+    Sound.beep();
+    Sound.beep();
+    Sound.beep();
+    Sound.beep();
+    Sound.beep();
 
   }
 

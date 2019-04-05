@@ -651,6 +651,14 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     rightMotor.rotate(convertDistance(wheelRad,
         3 * TILE_SIZE + (TILE_SIZE - odometryCorrection.DISTANCE_TO_SENSOR)), false);
     // exit the tunnel
+    
+    //correction after the tunnel
+    odometryCorrection.correct(correctionAngles[3]);
+    leftMotor.rotate(-convertDistance(wheelRad, odometryCorrection.DISTANCE_TO_SENSOR), true);
+    rightMotor.rotate(-convertDistance(wheelRad, odometryCorrection.DISTANCE_TO_SENSOR), false);
+    turnTo(correctionAngles[2]);
+    odometryCorrection.correct((correctionAngles[2] + 180) % 360);
+    
 
     // travel to starting point
     System.out.println("starting point" + WiFi.localizeX + "," + WiFi.localizeY);
@@ -660,12 +668,6 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     leftMotor.rotate(convertDistance(wheelRad, 2), true);
     rightMotor.rotate(convertDistance(wheelRad, 2), false);
 
-    releaseCan();
-    Sound.beep();
-    Sound.beep();
-    Sound.beep();
-    Sound.beep();
-    Sound.beep();
   }
 
   /**

@@ -40,6 +40,8 @@ public class ColorClassification implements TimerListener {
 
   // target color
   private static int TR = -1;
+  
+  private int beepingTime = 500;
 
 
   public ColorClassification(EV3LargeRegulatedMotor sensorMotor, TextLCD lcd, int TR) {
@@ -87,29 +89,29 @@ public class ColorClassification implements TimerListener {
     switch (result) {
       case 1:
         lcd.drawString("Blue", 0, 2);
-        Sound.playTone(500, 500);
+        Sound.playTone(500, beepingTime);
         break;
       case 2:
         lcd.drawString("Green", 0, 2);
-        Sound.playTone(500, 500);
-        Sound.playTone(500, 500);
+        Sound.playTone(500, beepingTime);
+        Sound.playTone(500, beepingTime);
         break;
       case 3:
         lcd.drawString("Yellow", 0, 2);
-        Sound.playTone(500, 500);
-        Sound.playTone(500, 500);
-        Sound.playTone(500, 500);
+        Sound.playTone(500, beepingTime);
+        Sound.playTone(500, beepingTime);
+        Sound.playTone(500, beepingTime);
         break;
       case 4:
         lcd.drawString("Red", 0, 2);
-        Sound.playTone(500, 500);
-        Sound.playTone(500, 500);
-        Sound.playTone(500, 500);
-        Sound.playTone(500, 500);
+        Sound.playTone(500, beepingTime);
+        Sound.playTone(500, beepingTime);
+        Sound.playTone(500, beepingTime);
+        Sound.playTone(500, beepingTime);
         break;
     }
 
-    if (result == TR) {
+    if (result == 3 || result == 4) {
       return true;
     } else {
       return false;
