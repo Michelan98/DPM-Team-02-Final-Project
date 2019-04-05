@@ -87,29 +87,28 @@ public class ColorClassification implements TimerListener {
     switch (result) {
       case 1:
         lcd.drawString("Blue", 0, 2);
-        Sound.playTone(100, 500);
+        Sound.playTone(500, 500);
         break;
       case 2:
         lcd.drawString("Green", 0, 2);
-        Sound.playTone(100, 500);
-        Sound.playTone(100, 500);
+        Sound.playTone(500, 500);
+        Sound.playTone(500, 500);
         break;
       case 3:
         lcd.drawString("Yellow", 0, 2);
-        Sound.playTone(100, 500);
-        Sound.playTone(100, 500);
-        Sound.playTone(100, 500);
+        Sound.playTone(500, 500);
+        Sound.playTone(500, 500);
+        Sound.playTone(500, 500);
         break;
       case 4:
         lcd.drawString("Red", 0, 2);
-        Sound.playTone(100, 500);
-        Sound.playTone(100, 500);
-        Sound.playTone(100, 500);
-        Sound.playTone(100, 500);
+        Sound.playTone(500, 500);
+        Sound.playTone(500, 500);
+        Sound.playTone(500, 500);
+        Sound.playTone(500, 500);
         break;
     }
 
-    //beep twice if the can has the target color; otherwise beep once
     if (result == TR) {
       return true;
     } else {

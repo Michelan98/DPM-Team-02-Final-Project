@@ -138,60 +138,115 @@ public class OdometryCorrection {
 		double thetaCorrection = translateTheta(theta);
 
 		// Correction in X
-		if (thetaCorrection == 90 || thetaCorrection == 270) {
+//		if (thetaCorrection == 90 || thetaCorrection == 270) {
+//
+//			if (thetaCorrection == 90) {
+//				// Compute the sensors' X position in cm's
+//				double position = odometer.getXYT()[0] + DISTANCE_TO_SENSOR;
+//
+//				// Find the X-coordinate of the nearest waypoint to sensorX.
+//				int correctedPosition = (int) Math.round(position / TILE_SIZE);
+//
+//				// Get the correct X
+//				xCorrection = TILE_SIZE * correctedPosition - DISTANCE_TO_SENSOR;
+//
+//			} else {
+//				// Compute the sensors' X position in cm's
+//				double position = odometer.getXYT()[0] - DISTANCE_TO_SENSOR;
+//
+//				// Find the X-coordinate of the nearest waypoint to sensorX.
+//				int correctedPosition = (int) Math.round(position / TILE_SIZE);
+//
+//				// Get the correct X
+//				xCorrection = TILE_SIZE * correctedPosition + DISTANCE_TO_SENSOR;
+//
+//			}
+//			odometer.setX(xCorrection);
+//
+//			// Correction in Y
+//		} else if (thetaCorrection == 0 || thetaCorrection == 180) {
+//
+//			if (thetaCorrection == 0) {
+//				// Compute the sensors' Y position in cm's
+//				double position = odometer.getXYT()[1] + DISTANCE_TO_SENSOR;
+//
+//				// Find the X-coordinate of the nearest waypoint to sensorX.
+//				int correctedPosition = (int) Math.round(position / TILE_SIZE);
+//
+//				// Get the correct Y
+//				yCorrection = TILE_SIZE * correctedPosition - DISTANCE_TO_SENSOR;
+//
+//				// Get the correct X
+//				// corrX = intermediateOdo[0] - (dTheta / Math.abs(dTheta) * offset);
+//
+//			} else {
+//				// Compute the sensors' Y position in cm's
+//				double position = odometer.getXYT()[1] - DISTANCE_TO_SENSOR;
+//
+//				// Find the X-coordinate of the nearest waypoint to sensorX.
+//				int correctedPosition = (int) Math.round(position / TILE_SIZE);
+//
+//				// Get the correct Y
+//				yCorrection = TILE_SIZE * correctedPosition + DISTANCE_TO_SENSOR;
+//
+//			}
+//			odometer.setY(yCorrection);
+//		}
+		
+      if (thetaCorrection == 90 || thetaCorrection == 270) {
 
-			if (thetaCorrection == 90) {
-				// Compute the sensors' X position in cm's
-				double position = odometer.getXYT()[0] + DISTANCE_TO_SENSOR;
+        if (thetaCorrection == 90) {
+            // Compute the sensors' X position in cm's
+            double position = odometer.getXYT()[0] - DISTANCE_TO_SENSOR;
 
-				// Find the X-coordinate of the nearest waypoint to sensorX.
-				int correctedPosition = (int) Math.round(position / TILE_SIZE);
+            // Find the X-coordinate of the nearest waypoint to sensorX.
+            int correctedPosition = (int) Math.round(position / TILE_SIZE);
 
-				// Get the correct X
-				xCorrection = TILE_SIZE * correctedPosition - DISTANCE_TO_SENSOR;
+            // Get the correct X
+            xCorrection = TILE_SIZE * correctedPosition + DISTANCE_TO_SENSOR;
 
-			} else {
-				// Compute the sensors' X position in cm's
-				double position = odometer.getXYT()[0] - DISTANCE_TO_SENSOR;
+        } else {
+            // Compute the sensors' X position in cm's
+            double position = odometer.getXYT()[0] + DISTANCE_TO_SENSOR;
 
-				// Find the X-coordinate of the nearest waypoint to sensorX.
-				int correctedPosition = (int) Math.round(position / TILE_SIZE);
+            // Find the X-coordinate of the nearest waypoint to sensorX.
+            int correctedPosition = (int) Math.round(position / TILE_SIZE);
 
-				// Get the correct X
-				xCorrection = TILE_SIZE * correctedPosition + DISTANCE_TO_SENSOR;
+            // Get the correct X
+            xCorrection = TILE_SIZE * correctedPosition - DISTANCE_TO_SENSOR;
 
-			}
-			odometer.setX(xCorrection);
+        }
+        odometer.setX(xCorrection);
 
-			// Correction in Y
-		} else if (thetaCorrection == 0 || thetaCorrection == 180) {
+        // Correction in Y
+    } else if (thetaCorrection == 0 || thetaCorrection == 180) {
 
-			if (thetaCorrection == 0) {
-				// Compute the sensors' Y position in cm's
-				double position = odometer.getXYT()[1] + DISTANCE_TO_SENSOR;
+        if (thetaCorrection == 0) {
+            // Compute the sensors' Y position in cm's
+            double position = odometer.getXYT()[1] - DISTANCE_TO_SENSOR;
 
-				// Find the X-coordinate of the nearest waypoint to sensorX.
-				int correctedPosition = (int) Math.round(position / TILE_SIZE);
+            // Find the X-coordinate of the nearest waypoint to sensorX.
+            int correctedPosition = (int) Math.round(position / TILE_SIZE);
 
-				// Get the correct Y
-				yCorrection = TILE_SIZE * correctedPosition - DISTANCE_TO_SENSOR;
+            // Get the correct Y
+            yCorrection = TILE_SIZE * correctedPosition + DISTANCE_TO_SENSOR;
 
-				// Get the correct X
-				// corrX = intermediateOdo[0] - (dTheta / Math.abs(dTheta) * offset);
+            // Get the correct X
+            // corrX = intermediateOdo[0] - (dTheta / Math.abs(dTheta) * offset);
 
-			} else {
-				// Compute the sensors' Y position in cm's
-				double position = odometer.getXYT()[1] - DISTANCE_TO_SENSOR;
+        } else {
+            // Compute the sensors' Y position in cm's
+            double position = odometer.getXYT()[1] + DISTANCE_TO_SENSOR;
 
-				// Find the X-coordinate of the nearest waypoint to sensorX.
-				int correctedPosition = (int) Math.round(position / TILE_SIZE);
+            // Find the X-coordinate of the nearest waypoint to sensorX.
+            int correctedPosition = (int) Math.round(position / TILE_SIZE);
 
-				// Get the correct Y
-				yCorrection = TILE_SIZE * correctedPosition + DISTANCE_TO_SENSOR;
+            // Get the correct Y
+            yCorrection = TILE_SIZE * correctedPosition - DISTANCE_TO_SENSOR;
 
-			}
-			odometer.setY(yCorrection);
-		}
+        }
+        odometer.setY(yCorrection);
+    }
 
 		odometer.setTheta(thetaCorrection);
 

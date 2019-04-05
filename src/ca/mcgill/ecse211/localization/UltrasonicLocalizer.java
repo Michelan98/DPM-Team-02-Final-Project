@@ -4,7 +4,6 @@ import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import ca.mcgill.ecse211.entryPoint.Lab5;
 import lejos.hardware.Button;
-import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.port.Port;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
@@ -70,11 +69,9 @@ public class UltrasonicLocalizer implements TimerListener {
 	    // rising edge
 	    awayFromWall(true, 30);
 	    angleA = toWall(true, 30); // back wall
-	    Sound.beep();
 
 	    awayFromWall(false, 30);
 	    angleB = toWall(false, 30); // left wall
-	    Sound.beep();
 
 	    // stop the timer, so there will be no new reading comes from the ultrasonic sensor
 	    timer.stop();
@@ -100,58 +97,6 @@ public class UltrasonicLocalizer implements TimerListener {
 	    Lab5.lcd.drawString("Press > to start LightLocalizer", 0, 5);
 	  }
 
-	  /**
-	   * the robot faces to the walls initially, and will move to the left wall first and then the back
-	   * wall after getting two angle readings, the robot will return to the initial 0 degree and then
-	   * turn to the actual 0 degree and then correct the theta in the odometer
-	   * 
-	   * @throws OdometerExceptions
-	   */
-	  public void risingEdge() throws OdometerExceptions {
-	    Timer timer = new Timer(30, new UltrasonicLocalizer(usSampleProvider));
-	    timer.start();
-
-	    int d = 17;
-	    // since the robot faces the wall at the initial state and will face the wall during the whole
-	    // process
-	    // the d we used is smaller than the falling edge
-
-
-	    Lab5.leftMotor.setSpeed(ultrasonicSpeed);
-	    Lab5.rightMotor.setSpeed(ultrasonicSpeed);
-	    Lab5.leftMotor.rotate(-convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, 20), true);
-	    Lab5.rightMotor.rotate(convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, 20), false);
-	    angleB = toWall(true, d); // left wall
-	    Sound.beep();
-
-	    Lab5.leftMotor.setSpeed(ultrasonicSpeed);
-	    Lab5.rightMotor.setSpeed(ultrasonicSpeed);
-	    Lab5.leftMotor.rotate(-convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, 20), true);
-	    Lab5.rightMotor.rotate(convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, 20), false);
-	    angleA = toWall(false, d); // back wall
-	    Sound.beep();
-
-	    turnTo(0);
-	    timer.stop();
-
-
-	    double deltaTheta = -1;
-	    if (angleA < angleB) {
-	      deltaTheta = (angleB + angleA) / 2 - 225;
-	    } else {
-	      deltaTheta = (angleB + angleA) / 2 - 45;
-	    }
-
-
-	    Lab5.leftMotor.setSpeed(ultrasonicSpeed);
-	    Lab5.rightMotor.setSpeed(ultrasonicSpeed);
-	    Lab5.leftMotor.rotate(convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, deltaTheta), true);
-	    Lab5.rightMotor.rotate(-convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, deltaTheta), false);
-
-	    odo.setTheta(0);
-	    Lab5.lcd.drawString("Press > to start LightLocalizer", 0, 5);
-
-	  }
 
 	  /**
 	   * this method turn the robot away from the wall
@@ -246,7 +191,6 @@ public class UltrasonicLocalizer implements TimerListener {
 	          filter_count++;
 
 	          if (filter_count == 4) {
-//	            Sound.beep();
 //	            System.out.println("distance: " + usDistance + " theta: " + odo.getXYT()[2]);
 	            System.out.println(usDistance);
 	            distance = usDistance;

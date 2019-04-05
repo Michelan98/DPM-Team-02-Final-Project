@@ -67,7 +67,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   private static ColorClassification colorClassification = null;
 
   private double currentDestination[] = {0, 0};
-  private static double searchPoint[][] = {{-1, -1}, {-1, -1}};
+  private static double searchPoint[][] = {{-1, -1}};
   private static double boundary = -1;
   private static boolean oneSearchPoint = false;
   private boolean isTargetCan = false;
@@ -84,7 +84,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   private final double navigationAccuracy = 2.5;
   private final double thetaAccuracy = 3;
 
-  private volatile static ArrayList<Double> canLocation; // the angle of can to the robot
+  private volatile static double canLocation; // the angle of can to the robot
   private static ArrayList<Double> dataset;
 
   private OdometryCorrection odometryCorrection;
@@ -102,6 +102,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
   CanGrabbing canGrabbing = null;
   boolean terminateStateMachine = false;
+  private static boolean foundACan = false;
 
   public NavigationWithObstacle(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,
       double track, double wheelRad, int TN_LL_X, int TN_LL_Y, int TN_UR_X, int TN_UR_Y, int LLX,
@@ -116,7 +117,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     this.rightMotor = rightMotor;
 
     this.leftMotor.setAcceleration(500);
-    this.rightMotor.setAcceleration(520);
+    this.rightMotor.setAcceleration(500);
 
     leftMotor.setSpeed(FORWARD_SPEED);
     rightMotor.setSpeed(FORWARD_SPEED);
@@ -149,7 +150,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
     isNavigating = false;
 
-    canLocation = new ArrayList<Double>();
+    canLocation = 0;
 
     state = State.INIT;
     dataset = new ArrayList<Double>();
@@ -184,9 +185,10 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     currentDestination[1] = searchPoint[0][1];
 
 
-    state = State.INIT;
+    double distance = 0;
 
     while (true) {
+      System.out.println("state " + state);
 
       switch (state) {
         case INIT: {
@@ -202,48 +204,45 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
             turnTo(0);
             leftMotor.stop();
             rightMotor.stop();
+            releaseCan();
             state = State.SCANNING;
           }
 
           break;
         }
         case SCANNING: {
-          releaseCan();
+          System.out.println("start scaning");
           scan();
-          state = State.COLORDETECTION;
+          break;
         }
         case COLORDETECTION: {
+          // System.out.println("color detection state");
 
-          System.out.println("color detection state");
-          System.out.println("size " + canLocation.size());
-          for (Double data : canLocation) {
-            turnTo(data - 3);
-            sampleProvider.fetchSample(sample, 0);
-            usDistance = (int) (sample[0] * 100); // convert to cm
-            startColorDetection();
-            if (isTargetCan) {
-              state = State.GRABBINGCAN;
-              break;
-            }
-          }
-
-          System.out.println(oneSearchPoint);
-          if (!oneSearchPoint) {
-            // travel to the next search point
-            currentDestination[0] = searchPoint[1][0];
-            currentDestination[1] = searchPoint[1][1];
-            state = State.TRAVELLING;
-          } else {
-            terminateStateMachine = true;
-          }
+          sampleProvider.fetchSample(sample, 0);
+          usDistance = (int) (sample[0] * 100); // convert to cm
+          distance = startColorDetection();
+          state = State.GRABBINGCAN;
 
           break;
 
         }
         case GRABBINGCAN: {
           startCanGrabbing();
+          usDistance = (int) (sample[0] * 100); // convert to cm
+          System.out.println("usD " + usDistance);
 
+          if(usDistance <7) {
+          // is a can
           terminateStateMachine = true;
+          }
+          else {
+            leftMotor.rotate(-convertDistance(wheelRad, distance), true);
+            rightMotor.rotate(-convertDistance(wheelRad, distance), false);
+            releaseCan();
+            state = State.SCANNING;
+          }
+
+
           break;
         }
       }
@@ -427,16 +426,21 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
   /**
    * This method starts color detection.
+   * 
+   * @return distance: return the distance from the scanning center to the can
    */
-  private void startColorDetection() {
+  private double startColorDetection() {
 
     int distance = usDistance;
-    if (usDistance > boundary + 0.5 * TILE_SIZE)
-      leftMotor.setSpeed(FORWARD_SPEED);
+
+    leftMotor.setSpeed(FORWARD_SPEED);
     rightMotor.setSpeed(FORWARD_SPEED);
 
     leftMotor.rotate(convertDistance(wheelRad, distance), true);
     rightMotor.rotate(convertDistance(wheelRad, distance), false);
+
+    leftMotor.stop(true);
+    rightMotor.stop(false);
     // reach the can and start the colorDetection
 
     Thread colorThread = new Thread() {
@@ -456,13 +460,11 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
       e.printStackTrace();
     }
 
-    if (isTargetCan) {
-      return;
-    }
+    return distance;
 
     // go back to the center
-    leftMotor.rotate(-convertDistance(wheelRad, distance), true);
-    rightMotor.rotate(-convertDistance(wheelRad, distance), false);
+    // leftMotor.rotate(-convertDistance(wheelRad, distance), true);
+    // rightMotor.rotate(-convertDistance(wheelRad, distance), false);
 
   }
 
@@ -504,8 +506,8 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     usDistance = (int) (sample[0] * 100); // convert to cm
 
     if (state == State.SCANNING) {
-      System.out.println(usDistance);
-      int filter_control = 5;
+      System.out.println(usDistance + " filter count" + filter_count);
+      int filter_control = 6;
 
       if (usDistance < boundary) {
 
@@ -518,32 +520,17 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           filter_count++;
           dataset.add(odo.getXYT()[2]);
 
-          if (filter_count == 4) {
-            Sound.beep();
+          if (filter_count > filter_control) {
+            foundACan = true;
           }
 
         } else {
           filter_count = 0;
-          System.out.println("size" + dataset.size());
 
-          if (dataset.size() >= filter_control) {
-            // int mid = dataset.size()/2;
-            double midTheta = (dataset.get(0) + dataset.get(dataset.size() - 1)) / 2;
-            canLocation.add(midTheta);
-          }
-          dataset = new ArrayList<Double>();
         }
       } else {
         // outside of boundary
-
         filter_count = 0;
-        System.out.println("size" + dataset.size());
-
-        if (dataset.size() >= filter_control) {
-          double midTheta = (dataset.get(0) + dataset.get(dataset.size() - 1)) / 2;
-          canLocation.add(midTheta);
-        }
-        dataset = new ArrayList<Double>();
       }
     }
     previousUsDistance = usDistance;
@@ -557,30 +544,12 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
     leftMotor.setSpeed(TURNING_SPEED);
     rightMotor.setSpeed(TURNING_SPEED);
-    leftMotor.rotate(convertAngle(wheelRad, track, 360), true);
-    rightMotor.rotate(-convertAngle(wheelRad, track, 360), false);
-
-
-    // TESTING CODE
-    // try {
-    // Thread.sleep(2000);
-    // } catch (InterruptedException e) {
-    // e.printStackTrace();
-    // }
-
-    // for (Double data : canLocation) {
-    // lcd.drawString(Double.toString(data), 0, 0);
-    // System.out.println(Double.toString(data));
-    // turnTo(data - 3);
-    // Sound.beep();
-    // sampleProvider.fetchSample(sample, 0);
-    // usDistance = (int) (sample[0] * 100); // convert to cm
-    // System.out.println(usDistance);
-    // startColorDetection();
-    // }
-
-
-
+    while (!foundACan) {
+      leftMotor.forward();
+    }
+    leftMotor.stop(false);
+    foundACan = false;
+    state = State.COLORDETECTION;
   }
 
   /**
@@ -607,19 +576,37 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     System.out.println("doing correction");
     turnTo(correctionAngles[0]);
     odometryCorrection.correct(correctionAngles[0]);
+    System.out.println(
+        "odometer correction" + odo.getXYT()[0] + "," + odo.getXYT()[1] + "," + odo.getXYT()[2]);
     double forwardDistance = TILE_SIZE / 2 - odometryCorrection.DISTANCE_TO_SENSOR;
     leftMotor.rotate(convertDistance(wheelRad, forwardDistance), true);
     rightMotor.rotate(convertDistance(wheelRad, forwardDistance), false);
 
     turnTo(correctionAngles[1]);
     odometryCorrection.correct(correctionAngles[1]);
+    System.out.println(
+        "odometer correction" + odo.getXYT()[0] + "," + odo.getXYT()[1] + "," + odo.getXYT()[2]);
+    leftMotor.setSpeed(FORWARD_SPEED);
+    rightMotor.setSpeed(FORWARD_SPEED);
     leftMotor.rotate(convertDistance(wheelRad,
         3 * TILE_SIZE + (TILE_SIZE - odometryCorrection.DISTANCE_TO_SENSOR)), true);
     rightMotor.rotate(convertDistance(wheelRad,
         3 * TILE_SIZE + (TILE_SIZE - odometryCorrection.DISTANCE_TO_SENSOR)), false);
     // exit the tunnel
 
-    // travel to ll_sz +1
+    // correction
+    odometryCorrection.correct(correctionAngles[1]);
+    leftMotor.rotate(-convertDistance(wheelRad, odometryCorrection.DISTANCE_TO_SENSOR), true);
+    rightMotor.rotate(-convertDistance(wheelRad, odometryCorrection.DISTANCE_TO_SENSOR), false);
+    System.out.println(
+        "odometer correction" + odo.getXYT()[0] + "," + odo.getXYT()[1] + "," + odo.getXYT()[2]);
+    turnTo((correctionAngles[0] + 180) % 360);
+    odometryCorrection.correct((correctionAngles[0] + 180) % 360);
+    
+    System.out.println(
+        "odometer correction" + odo.getXYT()[0] + "," + odo.getXYT()[1] + "," + odo.getXYT()[2]);
+
+    // travel to ll_sz
     System.out.println(destinations[2][0] + " " + destinations[2][1]);
     while (!checkIfDone(destinations[2][0], destinations[2][1])) {
       travelTo(destinations[2][0], destinations[2][1], xFirst);
@@ -633,7 +620,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     Sound.beep();
 
     // close the thing and push cans away
-    startCanGrabbing();
+     startCanGrabbing();
 
   }
 
@@ -792,8 +779,8 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     }
 
     // +1 so the robot will not hit the wall if the searching area is right next to the wall
-    destinations[2][0] = SZ_LL_X + 1;
-    destinations[2][1] = SZ_LL_Y + 1;
+    destinations[2][0] = SZ_LL_X;
+    destinations[2][1] = SZ_LL_Y;
 
 
     if (navigationCase == 3 || navigationCase == 2) {
@@ -837,38 +824,14 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
       virtual_UR_Y--;
     }
 
-    if ((virtual_UR_X - virtual_LL_X) * (virtual_UR_Y - virtual_LL_Y) < 5) {
-      // one search point
-      searchPoint[0][0] = (virtual_UR_X + virtual_LL_X) / 2;
-      searchPoint[0][1] = (virtual_UR_Y + virtual_LL_Y) / 2;
-      boundary =
-          Math.min((virtual_UR_X - virtual_LL_X), (virtual_UR_Y - virtual_LL_Y)) / 2 * TILE_SIZE;
-      oneSearchPoint = true;
-
-    } else {
-      // two search point
-      oneSearchPoint = false;
-      if (orientation) {
-        searchPoint[0][0] = (virtual_UR_X - virtual_LL_X) / 3 + virtual_LL_X;
-        searchPoint[0][1] = (virtual_UR_Y - virtual_LL_Y) / 2 + virtual_LL_Y;
-        searchPoint[1][0] = (virtual_UR_X - virtual_LL_X) / 3 * 2 + virtual_LL_X;
-        searchPoint[1][1] = (virtual_UR_Y - virtual_LL_Y) / 2 + virtual_LL_Y;
-        boundary = Math.min((virtual_UR_X - virtual_LL_X) / 3, (virtual_UR_Y - virtual_LL_Y) / 2)
-            * TILE_SIZE;
+    searchPoint[0][0] = (virtual_UR_X + virtual_LL_X) / 2;
+    searchPoint[0][1] = (virtual_UR_Y + virtual_LL_Y) / 2;
+    boundary =
+        Math.min((virtual_UR_X - virtual_LL_X), (virtual_UR_Y - virtual_LL_Y)) / 2 * TILE_SIZE;
 
 
-      } else {
-        searchPoint[0][0] = (virtual_UR_X - virtual_LL_X) / 2 + virtual_LL_X;
-        searchPoint[0][1] = (virtual_UR_Y - virtual_LL_Y) / 3 + virtual_LL_Y;
-        searchPoint[1][0] = (virtual_UR_X - virtual_LL_X) / 2 + virtual_LL_X;
-        searchPoint[1][1] = (virtual_UR_Y - virtual_LL_Y) / 3 * 2 + virtual_LL_Y;
-        boundary = Math.min((virtual_UR_X - virtual_LL_X) / 2, (virtual_UR_Y - virtual_LL_Y) / 3)
-            * TILE_SIZE;
-      }
-    }
-    System.out
-        .println("p1:" + searchPoint[0][0] + "," + searchPoint[0][1] + " p2:" + searchPoint[1][0]
-            + "," + searchPoint[1][1] + " boundary" + boundary + "oneSearchPoint" + oneSearchPoint);
+    System.out.println("p1:" + searchPoint[0][0] + "," + searchPoint[0][1] + " boundary" + boundary
+        + "oneSearchPoint" + oneSearchPoint);
 
   }
 
