@@ -80,6 +80,7 @@ public class ColorClassification implements TimerListener {
       timer.stop();
 
       if (noCan) {
+        noCan = false;
         return false;
       } else {
 
@@ -120,11 +121,12 @@ public class ColorClassification implements TimerListener {
             break;
         }
 
-        if (result == 3 || result == 4) {
-          return true;
-        } else {
-          return false;
-        }
+        return true;
+//        if (result == 3 || result == 4) {
+//          return true;
+//        } else {
+//          return false;
+//        }
       }
 
 
