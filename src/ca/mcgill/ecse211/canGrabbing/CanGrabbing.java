@@ -1,5 +1,6 @@
 package ca.mcgill.ecse211.canGrabbing;
 
+import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.motor.EV3MediumRegulatedMotor;
 
 /**
@@ -12,22 +13,26 @@ import lejos.hardware.motor.EV3MediumRegulatedMotor;
 public class CanGrabbing {
 
   private static EV3MediumRegulatedMotor canGrabbingMotor = null;
+  private static EV3LargeRegulatedMotor sensorMotor = null;
 
-  public CanGrabbing(EV3MediumRegulatedMotor canGrabbingMotor) {
+  public CanGrabbing(EV3MediumRegulatedMotor canGrabbingMotor, EV3LargeRegulatedMotor sensorMotor) {
     this.canGrabbingMotor = canGrabbingMotor;
+    this.sensorMotor = sensorMotor;
   }
 
   /**
    * control the medium motor to grab the can
    */
   public void grabCan() {
-    canGrabbingMotor.rotate(105);
+    canGrabbingMotor.rotate(90, true);
+    sensorMotor.rotate(-30, false);
   }
 
   /**
    * control the medium motor to release the can
    */
   public void releaseCan() {
-    canGrabbingMotor.rotate(-105);
+    canGrabbingMotor.rotate(-90, true);
+    sensorMotor.rotate(30, false);
   }
 }

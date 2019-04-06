@@ -18,6 +18,7 @@ import lejos.utility.TimerListener;
 
 /**
  * This class is responsible for can color classification with a rotating light sensor.
+ * 
  * @author Sandra Deng
  *
  */
@@ -30,24 +31,28 @@ public class ColorClassification implements TimerListener {
 
   private static EV3LargeRegulatedMotor sensorMotor;
   private static TextLCD lcd;
-  
-  //1: blue, 2: green, 3: yellow, 4: red, 5: white
-  private double canRGBNormalizedMeans[][] = {{0.298917037, 0.726693533, 0.612517117},{0.250897607, 0.943892592, 0.207426042},
-      {0.833111075, 0.526009994, 0.156434809},{0.927464231, 0.317823524, 0.130221225},{0.711488185, 0.570923876, 0.377780294}};
+
+  // 1: blue, 2: green, 3: yellow, 4: red, 5: white
+  private double canRGBNormalizedMeans[][] = {{0.298917037, 0.726693533, 0.612517117},
+      {0.250897607, 0.943892592, 0.207426042}, {0.833111075, 0.526009994, 0.156434809},
+      {0.927464231, 0.317823524, 0.130221225}, {0.711488185, 0.570923876, 0.377780294}};
 
   // 4: red can, 2: green can, 3: yellow can, 1: blue can, 5:label
   private static int colorCount[] = {0, 0, 0, 0, 0};
 
   // target color
   private static int TR = -1;
-  
+
   private int beepingTime = 500;
+
+  private SampleProvider usSensor = null;
+  private static boolean noCan = false;
 
 
   public ColorClassification(EV3LargeRegulatedMotor sensorMotor, TextLCD lcd, int TR) {
     this.sensorMotor = sensorMotor;
     this.lcd = lcd;
-    this.TR = TR;   //1 larger than the index
+    this.TR = TR; // 1 larger than the index
   }
 
   /**
@@ -62,61 +67,66 @@ public class ColorClassification implements TimerListener {
    */
   public boolean colorClassify() throws InterruptedException {
 
-    Timer timer = new Timer(30, new ColorClassification(sensorMotor, lcd, TR));
-    timer.start();
 
-    //rotate 220 degrees around the can and then rotate back to the original position
-    sensorMotor.setSpeed(130);
-    sensorMotor.rotate(-110);
-    sensorMotor.rotate(110);
-    //stop the timer, so no sample will be fetched during calculation time
-    timer.stop();
 
-    //find out the color with largest number of "hit"
-    int result = -1;
-    int temp = 0;   //-1
-    for (int i = 0; i < 4; i++) {
-      System.out.println("color count" + i+ " "+ colorCount[i]);
-      if (temp < colorCount[i]) {
-        temp = colorCount[i];
-        result = i+1;
+      Timer timer = new Timer(30, new ColorClassification(sensorMotor, lcd, TR));
+      timer.start();
+
+      // rotate 220 degrees around the can and then rotate back to the original position
+      sensorMotor.setSpeed(70);
+      sensorMotor.rotate(-110);
+      sensorMotor.rotate(110);
+      // stop the timer, so no sample will be fetched during calculation time
+      timer.stop();
+
+      if (noCan) {
+        return false;
+      } else {
+
+        // find out the color with largest number of "hit"
+        int result = -1;
+        int temp = 0; // -1
+        for (int i = 0; i < 4; i++) {
+          if (temp < colorCount[i]) {
+            temp = colorCount[i];
+            result = i + 1;
+          }
+        }
+
+
+        // display the result on the lcd
+        switch (result) {
+          case 1:
+            lcd.drawString("Blue", 0, 2);
+            Sound.playTone(500, beepingTime);
+            break;
+          case 2:
+            lcd.drawString("Green", 0, 2);
+            Sound.playTone(500, beepingTime);
+            Sound.playTone(500, beepingTime);
+            break;
+          case 3:
+            lcd.drawString("Yellow", 0, 2);
+            Sound.playTone(500, beepingTime);
+            Sound.playTone(500, beepingTime);
+            Sound.playTone(500, beepingTime);
+            break;
+          case 4:
+            lcd.drawString("Red", 0, 2);
+            Sound.playTone(500, beepingTime);
+            Sound.playTone(500, beepingTime);
+            Sound.playTone(500, beepingTime);
+            Sound.playTone(500, beepingTime);
+            break;
+        }
+
+        if (result == 3 || result == 4) {
+          return true;
+        } else {
+          return false;
+        }
       }
-    }
-    
-    System.out.println("result"+result);
 
-    //display the result on the lcd
-    switch (result) {
-      case 1:
-        lcd.drawString("Blue", 0, 2);
-        Sound.playTone(500, beepingTime);
-        break;
-      case 2:
-        lcd.drawString("Green", 0, 2);
-        Sound.playTone(500, beepingTime);
-        Sound.playTone(500, beepingTime);
-        break;
-      case 3:
-        lcd.drawString("Yellow", 0, 2);
-        Sound.playTone(500, beepingTime);
-        Sound.playTone(500, beepingTime);
-        Sound.playTone(500, beepingTime);
-        break;
-      case 4:
-        lcd.drawString("Red", 0, 2);
-        Sound.playTone(500, beepingTime);
-        Sound.playTone(500, beepingTime);
-        Sound.playTone(500, beepingTime);
-        Sound.playTone(500, beepingTime);
-        break;
-    }
-
-    if (result == 3 || result == 4) {
-      return true;
-    } else {
-      return false;
-    }
-    
 
   }
 
@@ -148,17 +158,20 @@ public class ColorClassification implements TimerListener {
       if (temp > d[i]) {
         temp = d[i];
         result = i;
+
       }
     }
+    if (result == -1) {
+      noCan = true;
+      return;
+    }
     colorCount[result]++;
-//    if(result != -1) {
-//      
-//    }
 
   }
 
   /**
    * This is a helper method used in timedOut(). It normalizes the sample.
+   * 
    * @param sample
    * @param rgbReadings
    * @return

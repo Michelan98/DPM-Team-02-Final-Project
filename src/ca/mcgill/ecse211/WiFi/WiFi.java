@@ -15,7 +15,7 @@ public class WiFi {
 
   // set at the beginning
 
-  private static final String SERVER_IP = "192.168.2.45"; // .8
+  private static final String SERVER_IP = "192.168.2.19"; // .8
 
   private static final int TEAM_NUMBER = 2;
 

@@ -60,9 +60,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
 
   private static Odometer odo = null;
-  private int count = 0; // use it to track which point to go
 
-  private static int flag = 0;
   private Timer timer;
   private static ColorClassification colorClassification = null;
 
@@ -84,7 +82,6 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   private final double navigationAccuracy = 2.5;
   private final double thetaAccuracy = 3;
 
-  private volatile static double canLocation; // the angle of can to the robot
   private static ArrayList<Double> dataset;
 
   private OdometryCorrection odometryCorrection;
@@ -103,6 +100,10 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   CanGrabbing canGrabbing = null;
   boolean terminateStateMachine = false;
   private static boolean foundACan = false;
+  
+  private static int numOfCan = 0;
+  
+  private static boolean corrected = false;
 
   public NavigationWithObstacle(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,
       double track, double wheelRad, int TN_LL_X, int TN_LL_Y, int TN_UR_X, int TN_UR_Y, int LLX,
@@ -150,8 +151,6 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
     isNavigating = false;
 
-    canLocation = 0;
-
     state = State.INIT;
     dataset = new ArrayList<Double>();
 
@@ -160,7 +159,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     this.lightLocalizer = lightLocalizer;
 
 
-    canGrabbing = new CanGrabbing(Lab5.canGrabbingMotor);
+    canGrabbing = new CanGrabbing(Lab5.canGrabbingMotor, Lab5.sensorMotor);
   }
 
   /**
@@ -221,7 +220,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           sampleProvider.fetchSample(sample, 0);
           usDistance = (int) (sample[0] * 100); // convert to cm
           distance = startColorDetection();
-          state = State.GRABBINGCAN;
+          
 
           break;
 
@@ -293,6 +292,14 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
       } else {
         // x is done
+        
+        //correction
+        if(state == State.INIT && !corrected) {
+        odometryCorrection.correct(roundTheta());
+        leftMotor.rotate(-convertDistance(wheelRad, OdometryCorrection.DISTANCE_TO_SENSOR),true);
+        rightMotor.rotate(-convertDistance(wheelRad, OdometryCorrection.DISTANCE_TO_SENSOR), false);
+        corrected = true;
+        }
 
         if (distanceY < 0 && Math.abs(theta - 180) > thetaAccuracy) {
           turnTo(180);
@@ -327,7 +334,16 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
 
       } else {
-        // x is done
+        // y is done
+        
+        //correction
+        if(state == State.INIT && !corrected) {
+        odometryCorrection.correct(roundTheta());
+        leftMotor.rotate(-convertDistance(wheelRad, OdometryCorrection.DISTANCE_TO_SENSOR), true);
+        rightMotor.rotate(-convertDistance(wheelRad, OdometryCorrection.DISTANCE_TO_SENSOR), false);
+        corrected = true;
+        }
+        
         if (distanceX < 0 && Math.abs(theta - 270) > thetaAccuracy) {
           turnTo(270);
         } else if (distanceX > 0 && Math.abs(theta - 90) > thetaAccuracy) {
@@ -459,6 +475,17 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
+    
+    if(!isTargetCan && numOfCan <3) {
+      numOfCan ++;
+      leftMotor.rotate(-convertDistance(wheelRad, distance), true);
+      rightMotor.rotate(-convertDistance(wheelRad, distance), false);
+      leftMotor.rotate(convertAngle(wheelRad, track, 5),false);
+      state = State.SCANNING;
+    }
+    else {
+      state = State.GRABBINGCAN;
+    }
 
     return distance;
 
@@ -489,6 +516,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     double pos[] = odo.getXYT();
     if (Math.abs(destinationX * TILE_SIZE - pos[0]) < navigationAccuracy
         && Math.abs(destinationY * TILE_SIZE - pos[1]) < navigationAccuracy) {
+      corrected = false;
       return true;
     } else {
       return false;
@@ -646,6 +674,8 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
     turnTo(correctionAngles[3]);
     odometryCorrection.correct(correctionAngles[3]);
+    leftMotor.setSpeed(FORWARD_SPEED);
+    rightMotor.setSpeed(FORWARD_SPEED);
     leftMotor.rotate(convertDistance(wheelRad,
         3 * TILE_SIZE + (TILE_SIZE - odometryCorrection.DISTANCE_TO_SENSOR)), true);
     rightMotor.rotate(convertDistance(wheelRad,
@@ -656,7 +686,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     odometryCorrection.correct(correctionAngles[3]);
     leftMotor.rotate(-convertDistance(wheelRad, odometryCorrection.DISTANCE_TO_SENSOR), true);
     rightMotor.rotate(-convertDistance(wheelRad, odometryCorrection.DISTANCE_TO_SENSOR), false);
-    turnTo(correctionAngles[2]);
+    turnTo((correctionAngles[2] + 180) % 360);
     odometryCorrection.correct((correctionAngles[2] + 180) % 360);
     
 
@@ -734,7 +764,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
       if (corner == 1 || corner == 2) {
         // case 2
         navigationCase = 2;
-        if (TN_LL_Y <= halfOfY) {
+        if (TN_LL_Y < halfOfY) {
           destinations[0][0] = TN_UR_X + 1;
           destinations[0][1] = TN_UR_Y;
           destinations[1][0] = TN_LL_X - 1;
@@ -744,7 +774,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           correctionAngles[2] = 180;
           correctionAngles[3] = 90;
         }
-        if (TN_LL_Y > halfOfY) {
+        if (TN_LL_Y >= halfOfY) {
           destinations[0][0] = TN_UR_X + 1;
           destinations[0][1] = TN_LL_Y;
           destinations[1][0] = TN_LL_X - 1;
@@ -753,6 +783,14 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           correctionAngles[1] = 270;
           correctionAngles[2] = 0;
           correctionAngles[3] = 90;
+        }
+        if(TN_LL_Y == 3) {
+          destinations[0][1] = TN_LL_Y;
+          destinations[1][1] = TN_LL_Y;
+        }
+        if(TN_LL_Y == 5) {
+          destinations[0][1] = TN_UR_Y;
+          destinations[1][1] = TN_UR_Y;
         }
       } else if (corner == 0 || corner == 3) {
         // case 3
@@ -767,7 +805,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           correctionAngles[2] = 180;
           correctionAngles[3] = 270;
         }
-        if (TN_LL_Y > halfOfY) {
+        if (TN_LL_Y >= halfOfY) {
           destinations[0][0] = TN_LL_X - 1;
           destinations[0][1] = TN_LL_Y;
           destinations[1][0] = TN_UR_X + 1;
@@ -776,6 +814,14 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           correctionAngles[1] = 90;
           correctionAngles[2] = 0;
           correctionAngles[3] = 270;
+        }
+        if(TN_LL_Y == 3) {
+          destinations[0][1] = TN_LL_Y;
+          destinations[1][1] = TN_LL_Y;
+        }
+        if(TN_LL_Y == 5) {
+          destinations[0][1] = TN_UR_Y;
+          destinations[1][1] = TN_UR_Y;
         }
       }
     }
@@ -835,6 +881,27 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     System.out.println("p1:" + searchPoint[0][0] + "," + searchPoint[0][1] + " boundary" + boundary
         + "oneSearchPoint" + oneSearchPoint);
 
+  }
+  
+  private double roundTheta() {
+    
+    double thetaCorrection = odo.getXYT()[2];
+    if(thetaCorrection >= 0 && thetaCorrection<=15) {
+      thetaCorrection = 0;
+    }
+    else if(thetaCorrection >=75 && thetaCorrection <= 105) {
+      thetaCorrection = 90;
+    }
+    else if(thetaCorrection >= 175 && thetaCorrection <= 195) {
+      thetaCorrection = 180;
+    }
+    else if(thetaCorrection >= 255 && thetaCorrection <= 285) {
+      thetaCorrection = 270;
+    }
+    else if(thetaCorrection >= 355 && thetaCorrection <= 360) {
+      thetaCorrection = 0;
+    }
+    return thetaCorrection;
   }
 
 

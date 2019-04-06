@@ -21,6 +21,7 @@ import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
 import ca.mcgill.ecse211.WiFi.*;
+import ca.mcgill.ecse211.canGrabbing.CanGrabbing;
 
 /**
  * This class is the entry point of the whole project.
@@ -101,6 +102,8 @@ public class Lab5 {
    * @param str
    */
   public static void main(String str[]) {
+    
+    
 
     Odometer odometer = null;
     NavigationWithObstacle navigation = null;
@@ -123,18 +126,19 @@ public class Lab5 {
     // get the startTime at the beginning
     startTime = System.currentTimeMillis();
 
-    //ultrasonic localization
-     try {
-     UltrasonicLocalizer usLocalizer = new UltrasonicLocalizer(sampleProvider);
-     usLocalizer.fallingEdge();
-     } catch (OdometerExceptions e) {
-     e.printStackTrace();
-     }
+    // ultrasonic localization
+    try {
+      UltrasonicLocalizer usLocalizer = new UltrasonicLocalizer(sampleProvider);
+      usLocalizer.fallingEdge();
+    } catch (OdometerExceptions e) {
+      e.printStackTrace();
+    }
 
-     //light localization
-    lightLocalizer.startLocalize(WiFi.localizeX*TILE_SIZE, WiFi.localizeY*TILE_SIZE, (int) WiFi.localizeTheta);
-    
-    //navigation initialization
+    // light localization
+    lightLocalizer.startLocalize(WiFi.localizeX * TILE_SIZE, WiFi.localizeY * TILE_SIZE,
+        (int) WiFi.localizeTheta);
+
+    // navigation initialization
     try {
       navigation = new NavigationWithObstacle(leftMotor, rightMotor, TRACK, WHEEL_RAD, WiFi.TunLL_x,
           WiFi.TunLL_y, WiFi.TunUR_x, WiFi.TunUR_y, WiFi.SZ_LL_x, WiFi.SZ_LL_y, WiFi.SZ_UR_x,
@@ -148,19 +152,21 @@ public class Lab5 {
     navigation.navigateToSearchingArea();
     Thread navigationThread = new Thread(navigation);
     navigationThread.start();
-    while(navigationThread.isAlive()) {}
+    while (navigationThread.isAlive()) {
+    }
     navigation.leaveSearchingArea();
-    
-    //reach the starting point
-    navigation.turnTo((int) WiFi.localizeTheta);
-    lightLocalizer.startLocalize(WiFi.localizeX*TILE_SIZE, WiFi.localizeY*TILE_SIZE, (int) WiFi.localizeTheta);
 
-    //push the can to the starting tile
-    navigation.turnTo(((int) WiFi.localizeTheta + 180)%360);
-    leftMotor.rotate(720, true);
-    rightMotor.rotate(720, false);
+    // reach the starting point
+    navigation.turnTo((int) WiFi.localizeTheta);
+    lightLocalizer.startLocalize(WiFi.localizeX * TILE_SIZE, WiFi.localizeY * TILE_SIZE,
+        (int) WiFi.localizeTheta);
+
+    // push the can to the starting tile
+    navigation.turnTo(((int) WiFi.localizeTheta + 225) % 360);
+    leftMotor.rotate(360, true);
+    rightMotor.rotate(360, false);
     navigation.releaseCan();
-    
+
     Sound.beep();
     Sound.beep();
     Sound.beep();
