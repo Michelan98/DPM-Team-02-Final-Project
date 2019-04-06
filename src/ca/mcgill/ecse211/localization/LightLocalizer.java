@@ -69,7 +69,7 @@ public class LightLocalizer {
 		
 		odometerCorrection.moveForward();
 		
-		// correct on grid lines
+		// correct on grid linest
 		correct();
 		
 		odometerCorrection.travelDistance(-DISTANCE_TO_SENSOR, 200);
