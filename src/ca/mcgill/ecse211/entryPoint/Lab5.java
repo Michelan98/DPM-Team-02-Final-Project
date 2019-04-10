@@ -67,7 +67,9 @@ public class Lab5 {
   private static final float END_TIME = 45f;
 
   public static int TURNING_SPEED = 100;
-  public static final int FORWARD_SPEED = 250;
+  public static int SCANNING_SPEED = 45;
+  public static final int FORWARD_SPEED = 350;
+  public static final int RETURN_SPEED = 400;
   public static final double TILE_SIZE = 30.48;
   
   public static final int BOARD_X = 15;
@@ -93,7 +95,7 @@ public class Lab5 {
   private static final LightSensorController rightLightSensor =
       new LightSensorController(rightLightMode);
 
-  public static int ACCELERATION = 300;
+  public static int ACCELERATION = 500;
 
   /**
    * the entry point of the whole program. Run this class to start color detection at stationary
@@ -122,6 +124,7 @@ public class Lab5 {
 
 
     WiFi.getData();
+    System.out.println(WiFi.corner+" "+WiFi.localizeX+" "+WiFi.localizeY+" "+ WiFi.localizeTheta+" "+ WiFi.SZ_LL_x+ " "+ WiFi.SZ_LL_y+" "+ WiFi.SZ_UR_x+" "+WiFi.SZ_UR_y+ " "+ WiFi.TunLL_x+ " "+ WiFi.TunLL_y+ " "+WiFi.TunUR_x+" "+ WiFi.TunUR_y );
 
     // get the startTime at the beginning
     startTime = System.currentTimeMillis();
@@ -137,6 +140,10 @@ public class Lab5 {
     // light localization
     lightLocalizer.startLocalize(WiFi.localizeX * TILE_SIZE, WiFi.localizeY * TILE_SIZE,
         (int) WiFi.localizeTheta);
+    Sound.beep();
+    Sound.beep();
+    Sound.beep();
+    //end of localization
 
     // navigation initialization
     try {
@@ -157,14 +164,9 @@ public class Lab5 {
     navigation.leaveSearchingArea();
 
     // reach the starting point
-    navigation.turnTo((int) WiFi.localizeTheta);
-    lightLocalizer.startLocalize(WiFi.localizeX * TILE_SIZE, WiFi.localizeY * TILE_SIZE,
-        (int) WiFi.localizeTheta);
 
     // push the can to the starting tile
     navigation.turnTo(((int) WiFi.localizeTheta + 225) % 360);
-    leftMotor.rotate(360, true);
-    rightMotor.rotate(360, false);
     navigation.releaseCan();
 
     Sound.beep();

@@ -60,7 +60,7 @@ public class LightLocalizer {
 	public void startLocalize(double x, double y, int theta) {
 
 		// start moving forward
-		odometerCorrection.setSpeeds(220, 220);
+		odometerCorrection.setSpeeds(350, 350);
 
 		odometerCorrection.moveForward();
 		
@@ -78,6 +78,7 @@ public class LightLocalizer {
 		odometerCorrection.setSpeeds(220, 220);
 		odometerCorrection.turnBy(90, true);
 
+	    odometerCorrection.setSpeeds(350, 350);
 		odometerCorrection.moveForward();
 		
 		odometerCorrection.slowDown();	
@@ -93,9 +94,7 @@ public class LightLocalizer {
 		// beeps three times when parallel to wall
 		odometer.setXYT(x, y, theta);
 		System.out.println(odometer.getXYT()[0]+" "+ odometer.getXYT()[1]+" "+odometer.getXYT()[2]);
-		Sound.beep();
-		Sound.beep();
-		Sound.beep();
+
 
 	}
 

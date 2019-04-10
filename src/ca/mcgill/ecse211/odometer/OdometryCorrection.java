@@ -16,7 +16,7 @@ import ca.mcgill.ecse211.entryPoint.*;
 public class OdometryCorrection {
 
 	// Constants
-	private static final int FORWARD_SPEED = 150;
+	private static final int FORWARD_SPEED = 300;
 	private static final int ROTATE_SPEED = 80;
 	private static final double TILE_SIZE = 30.48;
 	public static final double DISTANCE_TO_SENSOR = 11.3;
@@ -66,7 +66,7 @@ public class OdometryCorrection {
 	 */
 	public void correct(double thetaCorrection) {
 
-		setSpeeds(220, 220);
+		setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
 		
 		// start moving forward
 		moveForward();
@@ -400,7 +400,7 @@ public class OdometryCorrection {
 			if (leftLightSensor.lineDetected() || rightLightSensor.lineDetected()) {
 				stopMotors();
 				// travel back a bit from grid line
-				travelDistance(-3, 200);
+				travelDistance(-4, 200);
 				// set speed to approach grid line slower
 				setSpeeds(85, 85);
 				break;

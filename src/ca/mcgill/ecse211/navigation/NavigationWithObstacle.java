@@ -210,6 +210,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           break;
         }
         case SCANNING: {
+          boundary = TILE_SIZE*2;
           System.out.println("start scaning");
           scan();
           break;
@@ -237,6 +238,8 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           else {
             leftMotor.rotate(-convertDistance(wheelRad, distance), true);
             rightMotor.rotate(-convertDistance(wheelRad, distance), false);
+            leftMotor.rotate(convertAngle(wheelRad, track, 10), true);
+            rightMotor.rotate(-convertAngle(wheelRad, track, 10), false);
             releaseCan();
             state = State.SCANNING;
           }
@@ -271,8 +274,14 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     double currentY = pos[1];
     double theta = pos[2];
 
-    leftMotor.setSpeed(FORWARD_SPEED);
-    rightMotor.setSpeed(FORWARD_SPEED);
+    //set different speed for returning with a can (added weight)
+    if(terminateStateMachine) {
+    leftMotor.setSpeed(Lab5.RETURN_SPEED);
+    rightMotor.setSpeed(Lab5.RETURN_SPEED);
+    }else {
+      leftMotor.setSpeed(Lab5.FORWARD_SPEED);
+      rightMotor.setSpeed(Lab5.FORWARD_SPEED);
+    }
 
     // run along the line
     double distanceX = x * TILE_SIZE - currentX;
@@ -303,14 +312,6 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
             turnTo(0);
           }
         }
-        
-//        //correction
-//        if(state == State.INIT && !corrected) {
-//        odometryCorrection.correct(roundTheta());
-////        leftMotor.rotate(-convertDistance(wheelRad, OdometryCorrection.DISTANCE_TO_SENSOR),true);
-////        rightMotor.rotate(-convertDistance(wheelRad, OdometryCorrection.DISTANCE_TO_SENSOR), false);
-//        corrected = true;
-//        }
 
         leftMotor.forward();
         rightMotor.forward();
@@ -344,13 +345,6 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           turnTo(90);
         }
         
-        //correction
-//        if(state == State.INIT && !corrected) {
-//        odometryCorrection.correct(roundTheta());
-////        leftMotor.rotate(-convertDistance(wheelRad, OdometryCorrection.DISTANCE_TO_SENSOR), true);
-////        rightMotor.rotate(-convertDistance(wheelRad, OdometryCorrection.DISTANCE_TO_SENSOR), false);
-//        corrected = true;
-//        }
 
         leftMotor.forward();
         rightMotor.forward();
@@ -396,8 +390,15 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
         rightMotor.rotate(convertAngle(wheelRad, track, 360 - turningAngle), false);
       }
     }
-    leftMotor.setSpeed(FORWARD_SPEED);
-    rightMotor.setSpeed(FORWARD_SPEED);
+    
+    //set different speed for returning with a can (added weight)
+    if(terminateStateMachine) {
+    leftMotor.setSpeed(Lab5.RETURN_SPEED);
+    rightMotor.setSpeed(Lab5.RETURN_SPEED);
+    }else {
+      leftMotor.setSpeed(Lab5.FORWARD_SPEED);
+      rightMotor.setSpeed(Lab5.FORWARD_SPEED);
+    }
 
   }
 
@@ -550,6 +551,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           dataset.add(odo.getXYT()[2]);
 
           if (filter_count > filter_control) {
+            filter_count =0;
             foundACan = true;
           }
 
@@ -571,12 +573,14 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
    */
   public void scan() {
 
-    leftMotor.setSpeed(TURNING_SPEED);
-    rightMotor.setSpeed(TURNING_SPEED);
+    leftMotor.setSpeed(Lab5.SCANNING_SPEED);
+    rightMotor.setSpeed(Lab5.SCANNING_SPEED);
     while (!foundACan) {
       leftMotor.forward();
+      rightMotor.backward();
     }
-    leftMotor.stop(false);
+    leftMotor.stop(true);
+    rightMotor.stop(false);
     foundACan = false;
     state = State.COLORDETECTION;
   }
@@ -716,6 +720,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
    */
   public void initializePointsAndAngle() {
     int navigationCase = -1;
+    System.out.println(corner+" "+ TN_LL_X+ " "+ TN_LL_Y+" "+ TN_UR_X+" "+TN_UR_Y+ " "+ SZ_LL_X+ " "+ SZ_LL_Y);
 
     int halfOfX = Lab5.BOARD_X / 2;
     int halfOfY = Lab5.BOARD_Y / 2;
@@ -797,10 +802,18 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
         if(TN_LL_Y == 3) {
           destinations[0][1] = TN_LL_Y;
           destinations[1][1] = TN_LL_Y;
+          correctionAngles[0]= 0;
+          correctionAngles[1]= 270;
+          correctionAngles[2]= 0;
+          correctionAngles[3] = 90;
         }
         if(TN_LL_Y == 5) {
           destinations[0][1] = TN_UR_Y;
           destinations[1][1] = TN_UR_Y;
+          correctionAngles[0]= 180;
+          correctionAngles[1]= 270;
+          correctionAngles[2]= 180;
+          correctionAngles[3] = 90;
         }
       } else if (corner == 0 || corner == 3) {
         // case 3
@@ -828,10 +841,18 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
         if(TN_LL_Y == 3) {
           destinations[0][1] = TN_LL_Y;
           destinations[1][1] = TN_LL_Y;
+          correctionAngles[0] = 0;
+          correctionAngles[1] = 90;
+          correctionAngles[2] = 0;
+          correctionAngles[3] = 270;
         }
         if(TN_LL_Y == 5) {
           destinations[0][1] = TN_UR_Y;
           destinations[1][1] = TN_UR_Y;
+          correctionAngles[0] = 180;
+          correctionAngles[1] = 90;
+          correctionAngles[2] = 180;
+          correctionAngles[3] = 270;
         }
       }
     }
@@ -862,7 +883,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
 
     System.out.println(
-        "corner" + corner + "travelling to" + destinations[0][0] + " " + destinations[0][1]);
+        "corner" + corner + "travelling to" + destinations[0][0] + " " + destinations[0][1] + " "+destinations[1][0]+" "+destinations[1][1]+" "+destinations[2][0]+" "+destinations[2][1]);
 
   }
 

@@ -70,11 +70,14 @@ public class ColorClassification implements TimerListener {
 
 
       Timer timer = new Timer(30, new ColorClassification(sensorMotor, lcd, TR));
-      timer.start();
+
 
       // rotate 220 degrees around the can and then rotate back to the original position
-      sensorMotor.setSpeed(70);
+      sensorMotor.setSpeed(100);
       sensorMotor.rotate(-110);
+      
+      sensorMotor.setSpeed(70);
+      timer.start();
       sensorMotor.rotate(110);
       // stop the timer, so no sample will be fetched during calculation time
       timer.stop();

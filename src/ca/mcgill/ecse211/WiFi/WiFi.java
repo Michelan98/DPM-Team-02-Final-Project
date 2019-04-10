@@ -15,7 +15,7 @@ public class WiFi {
 
   // set at the beginning
 
-  private static final String SERVER_IP = "192.168.2.19"; // .8
+  private static final String SERVER_IP = "192.168.2.6"; // .8
 
   private static final int TEAM_NUMBER = 2;
 
@@ -90,7 +90,7 @@ public class WiFi {
 
       // team numbers
       redTeam = ((Long) data.get("RedTeam")).intValue();
-      // greenTeam = ((Long) data.get("GreenTeam")).intValue();
+      greenTeam = ((Long) data.get("GreenTeam")).intValue();
 
 
       // corners
@@ -134,10 +134,11 @@ public class WiFi {
       TNG_LL_x = ((Long) data.get("TNG_LL_x")).intValue();
       TNG_LL_y = ((Long) data.get("TNG_LL_y")).intValue();
       TNG_UR_x = ((Long) data.get("TNG_UR_x")).intValue();
-      TNG_UR_x = ((Long) data.get("TNG_UR_y")).intValue();
+      TNG_UR_y = ((Long) data.get("TNG_UR_y")).intValue();
+      
 
       // target can color for beta demo
-      target_color = ((Long) data.get("GreenTeam")).intValue();
+//      target_color = ((Long) data.get("GreenTeam")).intValue();
 
 
       if (redTeam == TEAM_NUMBER) {
