@@ -41,6 +41,11 @@ public class UltrasonicLocalizer implements TimerListener {
 
   private int ultrasonicSpeed = 270;
 
+  /**
+   * Constructor of the class. Initialize some attributes and set the acceleration.
+   * @param usSampleProvider
+   * @throws OdometerExceptions
+   */
   public UltrasonicLocalizer(SampleProvider usSampleProvider) throws OdometerExceptions {
 
     odo = Odometer.getOdometer();

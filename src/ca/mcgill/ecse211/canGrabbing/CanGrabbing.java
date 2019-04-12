@@ -15,6 +15,11 @@ public class CanGrabbing {
   private static EV3MediumRegulatedMotor canGrabbingMotor = null;
   private static EV3LargeRegulatedMotor sensorMotor = null;
 
+  /**
+   * constructor
+   * @param canGrabbingMotor
+   * @param sensorMotor
+   */
   public CanGrabbing(EV3MediumRegulatedMotor canGrabbingMotor, EV3LargeRegulatedMotor sensorMotor) {
     this.canGrabbingMotor = canGrabbingMotor;
     this.sensorMotor = sensorMotor;

@@ -49,6 +49,12 @@ public class ColorClassification implements TimerListener {
   private static boolean noCan = false;
 
 
+  /**
+   * constructor
+   * @param sensorMotor
+   * @param lcd
+   * @param TR
+   */
   public ColorClassification(EV3LargeRegulatedMotor sensorMotor, TextLCD lcd, int TR) {
     this.sensorMotor = sensorMotor;
     this.lcd = lcd;
@@ -56,12 +62,12 @@ public class ColorClassification implements TimerListener {
   }
 
   /**
-   * This method classifies the color of the can. The sensor motor will rotate 200 degrees forward
-   * and 200 degrees backward, so around 150 samples will be fetched from the color sensor, and the
+   * This method classifies the color of the can. The sensor motor will rotate 110 degrees forward
+   * and 110 degrees backward, so around 80 samples will be fetched from the color sensor, and the
    * sensor will go back to its original position. Each sample will be classified as a color, and
    * the number of "hit" of the 4 colors will be counted. The final result is determined by the
-   * color with largest number of "hit". If the target color is detected, it will beep twice
-   * otherwise only once.
+   * color with largest number of "hit". The robot will issue a sequence of beeps based on the
+   * result.
    * 
    * @throws InterruptedException
    */
@@ -72,10 +78,11 @@ public class ColorClassification implements TimerListener {
     Timer timer = new Timer(30, new ColorClassification(sensorMotor, lcd, TR));
 
 
-    // rotate 220 degrees around the can and then rotate back to the original position
+    // rotate 110 degrees to push the can into desired position
     sensorMotor.setSpeed(100);
     sensorMotor.rotate(-110);
 
+    // rotate 110 degrees anticlockwise to fetch samples
     sensorMotor.setSpeed(70);
     timer.start();
     sensorMotor.rotate(110);
@@ -83,6 +90,7 @@ public class ColorClassification implements TimerListener {
     timer.stop();
 
     if (noCan) {
+      //there is no can in the color classification region
       noCan = false;
       return false;
     } else {
@@ -138,9 +146,8 @@ public class ColorClassification implements TimerListener {
    */
   @Override
   public void timedOut() {
-    // motor rotate 360, fetch sample from sensor. compare the sample with the 4 colors and
+    // motor rotate 110 degrees, fetch sample from sensor. compare the sample with the 4 colors and
     // calculate euclidean mean
-    // store the smallest euclidean mean (for each color?)
     colorSampleProvider.fetchSample(sample, 0);
 
     double rgb[] = {sample[0], sample[1], sample[2]};
@@ -155,6 +162,7 @@ public class ColorClassification implements TimerListener {
     int result = -1;
     double temp = 999;
     for (int i = 0; i < 5; i++) {
+      // find the smallest euclidean mean
       if (temp > d[i]) {
         temp = d[i];
         result = i;
@@ -165,6 +173,7 @@ public class ColorClassification implements TimerListener {
       noCan = true;
       return;
     }
+    //number of hit of the color with smallest deviation increased by one
     colorCount[result]++;
 
   }

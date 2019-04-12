@@ -104,6 +104,29 @@ public class Navigation implements TimerListener, Runnable {
 
   private static boolean corrected = false;
 
+  /**
+   * The constructor of the class.
+   * @param leftMotor
+   * @param rightMotor
+   * @param track
+   * @param wheelRad
+   * @param TN_LL_X
+   * @param TN_LL_Y
+   * @param TN_UR_X
+   * @param TN_UR_Y
+   * @param LLX
+   * @param LLY
+   * @param URX
+   * @param URY
+   * @param cornerNum
+   * @param sensorMotor
+   * @param lcd
+   * @param TR
+   * @param sampleProvider
+   * @param odometryCorrection
+   * @param lightLocalizer
+   * @throws OdometerExceptions
+   */
   public Navigation(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,
       double track, double wheelRad, int TN_LL_X, int TN_LL_Y, int TN_UR_X, int TN_UR_Y, int LLX,
       int LLY, int URX, int URY, int cornerNum, EV3LargeRegulatedMotor sensorMotor, TextLCD lcd,
