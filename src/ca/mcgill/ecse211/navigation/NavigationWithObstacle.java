@@ -29,6 +29,7 @@ import lejos.utility.TimerListener;
 public class NavigationWithObstacle implements TimerListener, Runnable {
   private static final int FORWARD_SPEED = Lab5.FORWARD_SPEED;
   private static final int TURNING_SPEED = Lab5.TURNING_SPEED;
+  private static final int RETURN_SPEED = Lab5.RETURN_SPEED;
   private static final double TILE_SIZE = 30.48;
 
 
@@ -68,7 +69,6 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   private static double searchPoint[][] = {{-1, -1}};
   private static double boundary = -1;
   private static boolean oneSearchPoint = false;
-  private boolean isTargetCan = false;
 
   private static volatile int usDistance;
   private int filter_count = 0;
@@ -87,22 +87,23 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
   private OdometryCorrection odometryCorrection;
   private LightLocalizer lightLocalizer;
 
-  static double[][] destinations = {{0, 0}, {0, 0}, {0, 0}};
-  double[] correctionAngles = {0, 0, 0, 0};
-  boolean xFirst = true;
   // destinaiton: 0: correction point at the entry of the tunnel, 1: correction point at the exit of
   // the tunnel, 2: ll_sz
+  static double[][] destinations = {{0, 0}, {0, 0}, {0, 0}};
 
-  // correction angle: 0: first correction angle, 1: second correction angle, ...
+  // correction angle: 0: first correction angle, 1: second correction angle, 2: first correction
+  // angle when, 3: second correction angle
+  double[] correctionAngles = {0, 0, 0, 0};
+  boolean xFirst = true;
 
 
 
   CanGrabbing canGrabbing = null;
   boolean terminateStateMachine = false;
   private static boolean foundACan = false;
-  
+
   private static int numOfCan = 0;
-  
+
   private static boolean corrected = false;
 
   public NavigationWithObstacle(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,
@@ -125,7 +126,6 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
     this.track = track;
     this.wheelRad = wheelRad;
-    this.TR = 4;
     this.lcd = lcd;
     this.sensorMotor = sensorMotor;
 
@@ -179,7 +179,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     timer.start();
 
 
-    // travel to the center of the searching area
+    // set the current destination to the center of the searching area
     currentDestination[0] = searchPoint[0][0];
     currentDestination[1] = searchPoint[0][1];
 
@@ -187,7 +187,6 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     double distance = 0;
 
     while (true) {
-      System.out.println("state " + state);
 
       switch (state) {
         case INIT: {
@@ -210,18 +209,15 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           break;
         }
         case SCANNING: {
-          boundary = TILE_SIZE*2;
-          System.out.println("start scaning");
           scan();
           break;
         }
         case COLORDETECTION: {
-          // System.out.println("color detection state");
 
           sampleProvider.fetchSample(sample, 0);
           usDistance = (int) (sample[0] * 100); // convert to cm
           distance = startColorDetection();
-          
+
 
           break;
 
@@ -229,13 +225,12 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
         case GRABBINGCAN: {
           startCanGrabbing();
           usDistance = (int) (sample[0] * 100); // convert to cm
-          System.out.println("usD " + usDistance);
 
-          if(usDistance <7) {
-          // is a can
-          terminateStateMachine = true;
-          }
-          else {
+          if (usDistance < 7) {
+            // is a can, terminate the state machine
+            terminateStateMachine = true;
+          } else {
+            // didn't grab a can, travel back to the search point and trnansit to scanning state
             leftMotor.rotate(-convertDistance(wheelRad, distance), true);
             rightMotor.rotate(-convertDistance(wheelRad, distance), false);
             leftMotor.rotate(convertAngle(wheelRad, track, 10), true);
@@ -244,11 +239,11 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
             state = State.SCANNING;
           }
 
-
           break;
         }
       }
       if (terminateStateMachine) {
+        // terminate the state machine
         break;
       }
 
@@ -274,13 +269,13 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     double currentY = pos[1];
     double theta = pos[2];
 
-    //set different speed for returning with a can (added weight)
-    if(terminateStateMachine) {
-    leftMotor.setSpeed(Lab5.RETURN_SPEED);
-    rightMotor.setSpeed(Lab5.RETURN_SPEED);
-    }else {
-      leftMotor.setSpeed(Lab5.FORWARD_SPEED);
-      rightMotor.setSpeed(Lab5.FORWARD_SPEED);
+    // set different speed for returning with a can (added weight)
+    if (terminateStateMachine) {
+      leftMotor.setSpeed(RETURN_SPEED);
+      rightMotor.setSpeed(RETURN_SPEED);
+    } else {
+      leftMotor.setSpeed(FORWARD_SPEED);
+      rightMotor.setSpeed(FORWARD_SPEED);
     }
 
     // run along the line
@@ -301,7 +296,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
       } else {
         // x is done
-        
+
 
         if (distanceY < 0 && Math.abs(theta - 180) > thetaAccuracy) {
           turnTo(180);
@@ -337,14 +332,14 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
       } else {
         // y is done
-        
-        
+
+
         if (distanceX < 0 && Math.abs(theta - 270) > thetaAccuracy) {
           turnTo(270);
         } else if (distanceX > 0 && Math.abs(theta - 90) > thetaAccuracy) {
           turnTo(90);
         }
-        
+
 
         leftMotor.forward();
         rightMotor.forward();
@@ -390,14 +385,14 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
         rightMotor.rotate(convertAngle(wheelRad, track, 360 - turningAngle), false);
       }
     }
-    
-    //set different speed for returning with a can (added weight)
-    if(terminateStateMachine) {
-    leftMotor.setSpeed(Lab5.RETURN_SPEED);
-    rightMotor.setSpeed(Lab5.RETURN_SPEED);
-    }else {
-      leftMotor.setSpeed(Lab5.FORWARD_SPEED);
-      rightMotor.setSpeed(Lab5.FORWARD_SPEED);
+
+    // set different speed for returning with a can (added weight)
+    if (terminateStateMachine) {
+      leftMotor.setSpeed(RETURN_SPEED);
+      rightMotor.setSpeed(RETURN_SPEED);
+    } else {
+      leftMotor.setSpeed(FORWARD_SPEED);
+      rightMotor.setSpeed(FORWARD_SPEED);
     }
 
   }
@@ -465,7 +460,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     Thread colorThread = new Thread() {
       public void run() {
         try {
-          isTargetCan = colorClassification.colorClassify();
+          colorClassification.colorClassify();
         } catch (InterruptedException e) {
           // e.printStackTrace();
         }
@@ -478,18 +473,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
-    
-//    if(!isTargetCan && numOfCan <3) {
-//      numOfCan ++;
-//      leftMotor.rotate(-convertDistance(wheelRad, distance), true);
-//      rightMotor.rotate(-convertDistance(wheelRad, distance), false);
-//      leftMotor.rotate(convertAngle(wheelRad, track, 5),false);
-//      state = State.SCANNING;
-//    }
-//    else {
-//      state = State.GRABBINGCAN;
-//    }
-    
+
     state = State.GRABBINGCAN;
 
     return distance;
@@ -536,11 +520,11 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     usDistance = (int) (sample[0] * 100); // convert to cm
 
     if (state == State.SCANNING) {
-      System.out.println(usDistance + " filter count" + filter_count);
+      // fetch data from ultrasonic sensor during SCANNING state to find a can
+
       int filter_control = 6;
 
       if (usDistance < boundary) {
-
         if (filter_count == 0) {
           previousUsDistance = usDistance;
           dataset = new ArrayList<Double>();
@@ -551,7 +535,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           dataset.add(odo.getXYT()[2]);
 
           if (filter_count > filter_control) {
-            filter_count =0;
+            filter_count = 0;
             foundACan = true;
           }
 
@@ -598,7 +582,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
    * @param SZ_Y: y coordinate of the lower left corner of the searching area
    */
   public void navigateToSearchingArea() {
-    System.out.println(destinations[0][0] + " " + destinations[0][1]);
+
     // travel to the first correction point
     while (!checkIfDone(destinations[0][0], destinations[0][1])) {
       travelTo(destinations[0][0], destinations[0][1], xFirst);
@@ -606,19 +590,14 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
 
     // do correction at the first correction point
-    System.out.println("doing correction");
     turnTo(correctionAngles[0]);
     odometryCorrection.correct(correctionAngles[0]);
-    System.out.println(
-        "odometer correction" + odo.getXYT()[0] + "," + odo.getXYT()[1] + "," + odo.getXYT()[2]);
     double forwardDistance = TILE_SIZE / 2 - odometryCorrection.DISTANCE_TO_SENSOR;
     leftMotor.rotate(convertDistance(wheelRad, forwardDistance), true);
     rightMotor.rotate(convertDistance(wheelRad, forwardDistance), false);
 
     turnTo(correctionAngles[1]);
     odometryCorrection.correct(correctionAngles[1]);
-    System.out.println(
-        "odometer correction" + odo.getXYT()[0] + "," + odo.getXYT()[1] + "," + odo.getXYT()[2]);
     leftMotor.setSpeed(FORWARD_SPEED);
     rightMotor.setSpeed(FORWARD_SPEED);
     leftMotor.rotate(convertDistance(wheelRad,
@@ -631,22 +610,16 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     odometryCorrection.correct(correctionAngles[1]);
     leftMotor.rotate(-convertDistance(wheelRad, odometryCorrection.DISTANCE_TO_SENSOR), true);
     rightMotor.rotate(-convertDistance(wheelRad, odometryCorrection.DISTANCE_TO_SENSOR), false);
-    System.out.println(
-        "odometer correction" + odo.getXYT()[0] + "," + odo.getXYT()[1] + "," + odo.getXYT()[2]);
     turnTo((correctionAngles[0] + 180) % 360);
     odometryCorrection.correct((correctionAngles[0] + 180) % 360);
-    
-    System.out.println(
-        "odometer correction" + odo.getXYT()[0] + "," + odo.getXYT()[1] + "," + odo.getXYT()[2]);
 
     // travel to ll_sz
-    System.out.println(destinations[2][0] + " " + destinations[2][1]);
     while (!checkIfDone(destinations[2][0], destinations[2][1])) {
       travelTo(destinations[2][0], destinations[2][1], xFirst);
     }
 
     turnTo(0);
-    lightLocalizer.startLocalize(SZ_LL_X*TILE_SIZE, SZ_LL_Y*TILE_SIZE, 0);
+    lightLocalizer.startLocalize(destinations[2][0] * TILE_SIZE, destinations[2][1] * TILE_SIZE, 0);
     leftMotor.stop(true);
     rightMotor.stop(false);
     Sound.beep();
@@ -654,7 +627,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     Sound.beep();
 
     // close the thing and push cans away
-     startCanGrabbing();
+    startCanGrabbing();
 
   }
 
@@ -664,14 +637,15 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
    * This method drives the robot to leave the searching area.
    */
   public void leaveSearchingArea() {
-    
-    //travel to the ll +1
-    while (!checkIfDone(destinations[2][0], destinations[2][1]+1)) {
-      travelTo(destinations[2][0], destinations[2][1]+1, !xFirst);
+
+    // travel to the ll +1
+    while (!checkIfDone(destinations[2][0], destinations[2][1])) {
+      travelTo(destinations[2][0], destinations[2][1], !xFirst);
     }
     turnTo(0);
-    lightLocalizer.startLocalize(destinations[2][0]*TILE_SIZE, (destinations[2][1]+1)*TILE_SIZE, 0);
-    
+    lightLocalizer.startLocalize(destinations[2][0] * TILE_SIZE, (destinations[2][1]) * TILE_SIZE,
+        0);
+
     // travel to the first correction point
     System.out.println("second localization point" + destinations[1][0] + "," + destinations[1][1]);
     while (!checkIfDone(destinations[1][0], destinations[1][1])) {
@@ -679,7 +653,6 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     }
 
     // do correction at the first correction point
-    System.out.println("doing correction");
     turnTo(correctionAngles[2]);
     odometryCorrection.correct(correctionAngles[2]);
     double forwardDistance = TILE_SIZE / 2 - odometryCorrection.DISTANCE_TO_SENSOR;
@@ -695,17 +668,16 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
     rightMotor.rotate(convertDistance(wheelRad,
         3 * TILE_SIZE + (TILE_SIZE - odometryCorrection.DISTANCE_TO_SENSOR)), false);
     // exit the tunnel
-    
-    //correction after the tunnel
+
+    // correction after the tunnel
     odometryCorrection.correct(correctionAngles[3]);
     leftMotor.rotate(-convertDistance(wheelRad, odometryCorrection.DISTANCE_TO_SENSOR), true);
     rightMotor.rotate(-convertDistance(wheelRad, odometryCorrection.DISTANCE_TO_SENSOR), false);
     turnTo((correctionAngles[2] + 180) % 360);
     odometryCorrection.correct((correctionAngles[2] + 180) % 360);
-    
+
 
     // travel to starting point
-    System.out.println("starting point" + WiFi.localizeX + "," + WiFi.localizeY);
     while (!checkIfDone(WiFi.localizeX, WiFi.localizeY)) {
       travelTo(WiFi.localizeX, WiFi.localizeY, !xFirst);
     }
@@ -720,7 +692,8 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
    */
   public void initializePointsAndAngle() {
     int navigationCase = -1;
-    System.out.println(corner+" "+ TN_LL_X+ " "+ TN_LL_Y+" "+ TN_UR_X+" "+TN_UR_Y+ " "+ SZ_LL_X+ " "+ SZ_LL_Y);
+    System.out.println(corner + " " + TN_LL_X + " " + TN_LL_Y + " " + TN_UR_X + " " + TN_UR_Y + " "
+        + SZ_LL_X + " " + SZ_LL_Y);
 
     int halfOfX = Lab5.BOARD_X / 2;
     int halfOfY = Lab5.BOARD_Y / 2;
@@ -799,20 +772,20 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           correctionAngles[2] = 0;
           correctionAngles[3] = 90;
         }
-        if(TN_LL_Y == 3) {
+        if (TN_LL_Y == 3) {
           destinations[0][1] = TN_LL_Y;
           destinations[1][1] = TN_LL_Y;
-          correctionAngles[0]= 0;
-          correctionAngles[1]= 270;
-          correctionAngles[2]= 0;
+          correctionAngles[0] = 0;
+          correctionAngles[1] = 270;
+          correctionAngles[2] = 0;
           correctionAngles[3] = 90;
         }
-        if(TN_LL_Y == 5) {
+        if (TN_LL_Y == 5) {
           destinations[0][1] = TN_UR_Y;
           destinations[1][1] = TN_UR_Y;
-          correctionAngles[0]= 180;
-          correctionAngles[1]= 270;
-          correctionAngles[2]= 180;
+          correctionAngles[0] = 180;
+          correctionAngles[1] = 270;
+          correctionAngles[2] = 180;
           correctionAngles[3] = 90;
         }
       } else if (corner == 0 || corner == 3) {
@@ -838,7 +811,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           correctionAngles[2] = 0;
           correctionAngles[3] = 270;
         }
-        if(TN_LL_Y == 3) {
+        if (TN_LL_Y == 3) {
           destinations[0][1] = TN_LL_Y;
           destinations[1][1] = TN_LL_Y;
           correctionAngles[0] = 0;
@@ -846,7 +819,7 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
           correctionAngles[2] = 0;
           correctionAngles[3] = 270;
         }
-        if(TN_LL_Y == 5) {
+        if (TN_LL_Y == 5) {
           destinations[0][1] = TN_UR_Y;
           destinations[1][1] = TN_UR_Y;
           correctionAngles[0] = 180;
@@ -859,31 +832,13 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
 
     // +1 so the robot will not hit the wall if the searching area is right next to the wall
     destinations[2][0] = SZ_LL_X;
-    destinations[2][1] = SZ_LL_Y;
+    destinations[2][1] = SZ_LL_Y + 1;
 
 
     if (navigationCase == 3 || navigationCase == 2) {
       xFirst = false;
     }
-    
-//    if(xFirst == false) {
-//      //y first
-//      destinations[2][0] = TN_UR_X;
-//      destinations[2][1] = SZ_LL_Y;
-//      destinations[3][0] = SZ_LL_X;
-//      destinations[3][1] = SZ_LL_Y;
-//    }else {
-//      
-//      destinations[2][0] = TN_UR_X;
-//      destinations[2][1] = TN_UR_Y+1;
-//      destinations[3][0] = SZ_LL_X;
-//      destinations[3][1] = SZ_LL_Y;
-//    }
-    
 
-
-    System.out.println(
-        "corner" + corner + "travelling to" + destinations[0][0] + " " + destinations[0][1] + " "+destinations[1][0]+" "+destinations[1][1]+" "+destinations[2][0]+" "+destinations[2][1]);
 
   }
 
@@ -925,27 +880,20 @@ public class NavigationWithObstacle implements TimerListener, Runnable {
         Math.min((virtual_UR_X - virtual_LL_X), (virtual_UR_Y - virtual_LL_Y)) / 2 * TILE_SIZE;
 
 
-    System.out.println("p1:" + searchPoint[0][0] + "," + searchPoint[0][1] + " boundary" + boundary
-        + "oneSearchPoint" + oneSearchPoint);
-
   }
-  
+
   private double roundTheta() {
-    
+
     double thetaCorrection = odo.getXYT()[2];
-    if(thetaCorrection >= 0 && thetaCorrection<=15) {
+    if (thetaCorrection >= 0 && thetaCorrection <= 15) {
       thetaCorrection = 0;
-    }
-    else if(thetaCorrection >=75 && thetaCorrection <= 105) {
+    } else if (thetaCorrection >= 75 && thetaCorrection <= 105) {
       thetaCorrection = 90;
-    }
-    else if(thetaCorrection >= 175 && thetaCorrection <= 195) {
+    } else if (thetaCorrection >= 175 && thetaCorrection <= 195) {
       thetaCorrection = 180;
-    }
-    else if(thetaCorrection >= 255 && thetaCorrection <= 285) {
+    } else if (thetaCorrection >= 255 && thetaCorrection <= 285) {
       thetaCorrection = 270;
-    }
-    else if(thetaCorrection >= 355 && thetaCorrection <= 360) {
+    } else if (thetaCorrection >= 355 && thetaCorrection <= 360) {
       thetaCorrection = 0;
     }
     return thetaCorrection;

@@ -20,7 +20,6 @@ public class OdometryCorrection {
 	private static final int ROTATE_SPEED = 80;
 	private static final double TILE_SIZE = 30.48;
 	public static final double DISTANCE_TO_SENSOR = 11.3;
-	//private static final double THRESHOLD = LightSensorController.THRESHOLD;
 
 	// Left and right light sensors
 	private LightSensorController leftLightSensor;
@@ -81,8 +80,6 @@ public class OdometryCorrection {
 		boolean leftLineDetected = false;
 
 		while (!leftLineDetected && !rightLineDetected) {
-			// double rightSample = rightLS.fetch();
-			// double leftSample = leftLS.fetch();
 			if (rightLightSensor.lineDetected()) {
 				rightLineDetected = true;
 				// Stop the right motor
@@ -136,62 +133,6 @@ public class OdometryCorrection {
 		double xCorrection = 0;
 		double yCorrection = 0;
 		double thetaCorrection = translateTheta(theta);
-
-		// Correction in X
-//		if (thetaCorrection == 90 || thetaCorrection == 270) {
-//
-//			if (thetaCorrection == 90) {
-//				// Compute the sensors' X position in cm's
-//				double position = odometer.getXYT()[0] + DISTANCE_TO_SENSOR;
-//
-//				// Find the X-coordinate of the nearest waypoint to sensorX.
-//				int correctedPosition = (int) Math.round(position / TILE_SIZE);
-//
-//				// Get the correct X
-//				xCorrection = TILE_SIZE * correctedPosition - DISTANCE_TO_SENSOR;
-//
-//			} else {
-//				// Compute the sensors' X position in cm's
-//				double position = odometer.getXYT()[0] - DISTANCE_TO_SENSOR;
-//
-//				// Find the X-coordinate of the nearest waypoint to sensorX.
-//				int correctedPosition = (int) Math.round(position / TILE_SIZE);
-//
-//				// Get the correct X
-//				xCorrection = TILE_SIZE * correctedPosition + DISTANCE_TO_SENSOR;
-//
-//			}
-//			odometer.setX(xCorrection);
-//
-//			// Correction in Y
-//		} else if (thetaCorrection == 0 || thetaCorrection == 180) {
-//
-//			if (thetaCorrection == 0) {
-//				// Compute the sensors' Y position in cm's
-//				double position = odometer.getXYT()[1] + DISTANCE_TO_SENSOR;
-//
-//				// Find the X-coordinate of the nearest waypoint to sensorX.
-//				int correctedPosition = (int) Math.round(position / TILE_SIZE);
-//
-//				// Get the correct Y
-//				yCorrection = TILE_SIZE * correctedPosition - DISTANCE_TO_SENSOR;
-//
-//				// Get the correct X
-//				// corrX = intermediateOdo[0] - (dTheta / Math.abs(dTheta) * offset);
-//
-//			} else {
-//				// Compute the sensors' Y position in cm's
-//				double position = odometer.getXYT()[1] - DISTANCE_TO_SENSOR;
-//
-//				// Find the X-coordinate of the nearest waypoint to sensorX.
-//				int correctedPosition = (int) Math.round(position / TILE_SIZE);
-//
-//				// Get the correct Y
-//				yCorrection = TILE_SIZE * correctedPosition + DISTANCE_TO_SENSOR;
-//
-//			}
-//			odometer.setY(yCorrection);
-//		}
 		
       if (thetaCorrection == 90 || thetaCorrection == 270) {
 
@@ -231,8 +172,6 @@ public class OdometryCorrection {
             // Get the correct Y
             yCorrection = TILE_SIZE * correctedPosition + DISTANCE_TO_SENSOR;
 
-            // Get the correct X
-            // corrX = intermediateOdo[0] - (dTheta / Math.abs(dTheta) * offset);
 
         } else {
             // Compute the sensors' Y position in cm's
@@ -376,8 +315,6 @@ public class OdometryCorrection {
 	 * @param direction
 	 */
 	public void turnBy(double theta, boolean direction) {
-		//    leftMotor.setAcceleration(300);
-		//    rightMotor.setAcceleration(300);
 		if (direction) {
 			leftMotor.rotate(convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, theta), true);
 			rightMotor.rotate(-convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, theta), false);

@@ -15,7 +15,7 @@ public class WiFi {
 
   // set at the beginning
 
-  private static final String SERVER_IP = "192.168.2.6"; // .8
+  private static final String SERVER_IP = "192.168.2.4"; // "192.168.2.4"
 
   private static final int TEAM_NUMBER = 2;
 
@@ -46,7 +46,7 @@ public class WiFi {
   private static int SZG_LL_x = 0, SZG_LL_y = 0, SZG_UR_x = 0, SZG_UR_y = 0;
 
   // Island coordinates
-  // public static int Island_LL_x = 0, Island_LL_y = 0, Island_UR_x = 0, Island_UR_y = 0;
+   public static int Island_LL_x = 0, Island_LL_y = 0, Island_UR_x = 0, Island_UR_y = 0;
 
   // Red Tunnel
   private static int TNR_LL_x = 0, TNR_LL_y = 0, TNR_UR_x = 0, TNR_UR_y = 0;
@@ -119,10 +119,10 @@ public class WiFi {
       SZG_UR_y = ((Long) data.get("SZG_UR_y")).intValue();
 
       // island
-      // Island_LL_x = ((Long) data.get("Island_LL_x")).intValue();
-      // Island_LL_y = ((Long) data.get("Island_LL_y")).intValue();
-      // Island_UR_x = ((Long) data.get("Island_UR_x")).intValue();
-      // Island_UR_y = ((Long) data.get("Island_UR_y")).intValue();
+       Island_LL_x = ((Long) data.get("Island_LL_x")).intValue();
+       Island_LL_y = ((Long) data.get("Island_LL_y")).intValue();
+       Island_UR_x = ((Long) data.get("Island_UR_x")).intValue();
+       Island_UR_y = ((Long) data.get("Island_UR_y")).intValue();
 
       // red tunnel
       TNR_LL_x = ((Long) data.get("TNR_LL_x")).intValue();
@@ -251,8 +251,8 @@ public class WiFi {
       localizeY = 1;
       localizeTheta = 270;
     } else if (area == 2) {
-      localizeX = GRID_X - 1; // GRID_X - 1
-      localizeY = GRID_Y - 1; // GRID_Y - 1
+      localizeX = GRID_X - 1; 
+      localizeY = GRID_Y - 1; 
       localizeTheta = 180;
     } else if (area == 3) {
       localizeX = 1;

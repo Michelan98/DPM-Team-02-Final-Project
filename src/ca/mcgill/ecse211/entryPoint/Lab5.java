@@ -143,7 +143,6 @@ public class Lab5 {
     Sound.beep();
     Sound.beep();
     Sound.beep();
-    //end of localization
 
     // navigation initialization
     try {
