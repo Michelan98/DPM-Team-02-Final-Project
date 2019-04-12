@@ -24,9 +24,9 @@ public class LightLocalizer {
 
 	// Constants
 	private static final double WHEEL_RADIUS = 2.1;
-	private static int FORWARD_SPEED = Lab5.FORWARD_SPEED;
-	private static int TURNING_SPEED = Lab5.TURNING_SPEED;
-	private final double TILE_SIZE = Lab5.TILE_SIZE;
+	private static int FORWARD_SPEED = EntryPoint.FORWARD_SPEED;
+	private static int TURNING_SPEED = EntryPoint.TURNING_SPEED;
+	private final double TILE_SIZE = EntryPoint.TILE_SIZE;
 	private final double DISTANCE_TO_SENSOR = OdometryCorrection.DISTANCE_TO_SENSOR;
 
 	private Odometer odometer;
@@ -36,8 +36,6 @@ public class LightLocalizer {
 	// declaring lightSensorController objects
 	private static LightSensorController leftLightSensor;
 	private static LightSensorController rightLightSensor;
-
-	//private double color = 0.2;
 
 	/**
 	 * Constructor for the LightLocalizer class
@@ -57,6 +55,12 @@ public class LightLocalizer {
 
 	}
 
+	/**
+	 * call this method to start localization
+	 * @param x: expected x value
+	 * @param y: expected y value
+	 * @param theta: expected theta value
+	 */
 	public void startLocalize(double x, double y, int theta) {
 
 		// start moving forward
@@ -72,6 +76,7 @@ public class LightLocalizer {
 		// correct on grid lines
 		correct();
 		
+		//make the center of the robot on the grid line
 		odometerCorrection.travelDistance(-DISTANCE_TO_SENSOR, 200);
 		
 		// turning clockwise for direction = true
@@ -93,9 +98,6 @@ public class LightLocalizer {
 
 		// beeps three times when parallel to wall
 		odometer.setXYT(x, y, theta);
-		System.out.println(odometer.getXYT()[0]+" "+ odometer.getXYT()[1]+" "+odometer.getXYT()[2]);
-
-
 	}
 
 	/**

@@ -98,7 +98,7 @@ public class ColorClassification implements TimerListener {
       }
 
 
-      // display the result on the lcd
+      // issue beeps based on the result
       switch (result) {
         case 1:
           lcd.drawString("Blue", 0, 2);

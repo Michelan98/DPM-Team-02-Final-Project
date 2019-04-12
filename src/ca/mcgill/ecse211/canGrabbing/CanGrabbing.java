@@ -21,7 +21,7 @@ public class CanGrabbing {
   }
 
   /**
-   * control the medium motor to grab the can
+   * control the medium motor and the sensor motor to grab the can
    */
   public void grabCan() {
     canGrabbingMotor.rotate(90, true);
@@ -29,7 +29,7 @@ public class CanGrabbing {
   }
 
   /**
-   * control the medium motor to release the can
+   * control the medium motor and the sensor motor to release the can
    */
   public void releaseCan() {
     canGrabbingMotor.rotate(-90, true);

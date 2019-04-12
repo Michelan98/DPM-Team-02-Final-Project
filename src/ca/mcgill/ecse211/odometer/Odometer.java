@@ -121,8 +121,6 @@ public class Odometer extends OdometerData implements Runnable {
       double totalDistance = (distanceLeft + distanceRight) / 2;
       double deltaX = Math.sin(Math.toRadians(currentTheta)) * totalDistance;
       double deltaY = Math.cos(Math.toRadians(currentTheta)) * totalDistance;
-      // double currentX = data[0] + deltaX;
-      // double currentY = data[1] +deltaY;
 
       odo.update(deltaX, deltaY, deltaTheta);
 

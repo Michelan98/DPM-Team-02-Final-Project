@@ -2,7 +2,7 @@ package ca.mcgill.ecse211.WiFi;
 
 import java.util.Map;
 import ca.mcgill.ecse211.WiFiClient.WifiConnection;
-import ca.mcgill.ecse211.entryPoint.Lab5;
+import ca.mcgill.ecse211.entryPoint.EntryPoint;
 
 /**
  * This class allows to get the WiFi data from the TA's server when he presses Start in the GUI.

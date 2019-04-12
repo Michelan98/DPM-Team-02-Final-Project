@@ -6,7 +6,7 @@ import ca.mcgill.ecse211.colorClassification.ColorClassification;
 import ca.mcgill.ecse211.controller.LightSensorController;
 import ca.mcgill.ecse211.localization.LightLocalizer;
 import ca.mcgill.ecse211.localization.UltrasonicLocalizer;
-import ca.mcgill.ecse211.navigation.NavigationWithObstacle;
+import ca.mcgill.ecse211.navigation.Navigation;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import ca.mcgill.ecse211.odometer.OdometryCorrection;
@@ -30,13 +30,14 @@ import ca.mcgill.ecse211.canGrabbing.CanGrabbing;
  * @author Sandra Deng
  *
  */
-public class Lab5 {
+public class EntryPoint {
 
   public static EV3LargeRegulatedMotor sensorMotor =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("C"));
   public static final TextLCD lcd = LocalEV3.get().getTextLCD();
-  public static final int TR = -1; // 0: red can, 1: green can, 2: yellow can, 3: blue can
+  public static final int TR = -1; // target can 
 
+  //port configuration
   public static EV3MediumRegulatedMotor canGrabbingMotor =
       new EV3MediumRegulatedMotor(LocalEV3.get().getPort("D"));
 
@@ -98,17 +99,16 @@ public class Lab5 {
   public static int ACCELERATION = 500;
 
   /**
-   * the entry point of the whole program. Run this class to start color detection at stationary
-   * position
+   * the entry point of the whole program. 
    * 
    * @param str
    */
   public static void main(String str[]) {
     
     
-
+    //initialization
     Odometer odometer = null;
-    NavigationWithObstacle navigation = null;
+    Navigation navigation = null;
     try {
       odometer = Odometer.getOdometer(leftMotor, rightMotor, TRACK, WHEEL_RAD);
       Thread odoThread = new Thread(odometer);
@@ -122,9 +122,8 @@ public class Lab5 {
         new LightLocalizer(odometer, leftLightSensor, rightLightSensor, odometryCorrection);
 
 
-
+    //download data from the server
     WiFi.getData();
-    System.out.println(WiFi.corner+" "+WiFi.localizeX+" "+WiFi.localizeY+" "+ WiFi.localizeTheta+" "+ WiFi.SZ_LL_x+ " "+ WiFi.SZ_LL_y+" "+ WiFi.SZ_UR_x+" "+WiFi.SZ_UR_y+ " "+ WiFi.TunLL_x+ " "+ WiFi.TunLL_y+ " "+WiFi.TunUR_x+" "+ WiFi.TunUR_y );
 
     // get the startTime at the beginning
     startTime = System.currentTimeMillis();
@@ -146,7 +145,7 @@ public class Lab5 {
 
     // navigation initialization
     try {
-      navigation = new NavigationWithObstacle(leftMotor, rightMotor, TRACK, WHEEL_RAD, WiFi.TunLL_x,
+      navigation = new Navigation(leftMotor, rightMotor, TRACK, WHEEL_RAD, WiFi.TunLL_x,
           WiFi.TunLL_y, WiFi.TunUR_x, WiFi.TunUR_y, WiFi.SZ_LL_x, WiFi.SZ_LL_y, WiFi.SZ_UR_x,
           WiFi.SZ_UR_y, WiFi.corner, sensorMotor, lcd, 1, sampleProvider, odometryCorrection,
           lightLocalizer);
@@ -161,7 +160,6 @@ public class Lab5 {
     while (navigationThread.isAlive()) {
     }
     navigation.leaveSearchingArea();
-
     // reach the starting point
 
     // push the can to the starting tile

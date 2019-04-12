@@ -247,8 +247,8 @@ public class OdometryCorrection {
 
 		resetMotors();
 		setSpeeds(speed, speed);
-		leftMotor.rotate(convertDistance(Lab5.WHEEL_RAD, distance), true);
-		rightMotor.rotate(convertDistance(Lab5.WHEEL_RAD, distance), false);
+		leftMotor.rotate(convertDistance(EntryPoint.WHEEL_RAD, distance), true);
+		rightMotor.rotate(convertDistance(EntryPoint.WHEEL_RAD, distance), false);
 	}
 
 	/**
@@ -316,11 +316,11 @@ public class OdometryCorrection {
 	 */
 	public void turnBy(double theta, boolean direction) {
 		if (direction) {
-			leftMotor.rotate(convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, theta), true);
-			rightMotor.rotate(-convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, theta), false);
+			leftMotor.rotate(convertAngle(EntryPoint.WHEEL_RAD, EntryPoint.TRACK, theta), true);
+			rightMotor.rotate(-convertAngle(EntryPoint.WHEEL_RAD, EntryPoint.TRACK, theta), false);
 		} else {
-			leftMotor.rotate(-convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, theta), true);
-			rightMotor.rotate(convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, theta), false);
+			leftMotor.rotate(-convertAngle(EntryPoint.WHEEL_RAD, EntryPoint.TRACK, theta), true);
+			rightMotor.rotate(convertAngle(EntryPoint.WHEEL_RAD, EntryPoint.TRACK, theta), false);
 		}
 	}
 	
