@@ -16,7 +16,7 @@ import lejos.utility.TimerListener;
  * This class implements the ultraconic localizer. The theta in the odometer will be corrected after
  * the localization.
  * 
- * @author Snadra Deng
+ * @author Sandra Deng
  *
  */
 public class UltrasonicLocalizer implements TimerListener {
